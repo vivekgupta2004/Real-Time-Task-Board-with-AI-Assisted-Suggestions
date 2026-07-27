@@ -1,8 +1,10 @@
-import express, { Application, Request, Response } from 'express';
+import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { setupSwagger } from './config/swagger';
+import { AppError } from './utils/appError';
+import { errorHandler } from './middleware/error.middleware';
 
 const app: Application = express();
 
@@ -31,11 +33,10 @@ app.get('/', (_req: Request, res: Response) => {
   });
 });
 
-app.use((_req: Request, res: Response) => {
-  res.status(404).json({
-    success: false,
-    message: 'Resource not found',
-  });
+app.use((_req: Request, _res: Response, next: NextFunction) => {
+  next(new AppError('Resource not found', 404));
 });
+
+app.use(errorHandler);
 
 export default app;
