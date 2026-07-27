@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import { setupSwagger } from './config/swagger';
 import { AppError } from './utils/appError';
 import { errorHandler } from './middleware/error.middleware';
+import authRoutes from './routes/auth.routes';
 
 const app: Application = express();
 
@@ -32,6 +33,8 @@ app.get('/', (_req: Request, res: Response) => {
     message: 'Task Board API is running',
   });
 });
+
+app.use('/auth', authRoutes);
 
 app.use((_req: Request, _res: Response, next: NextFunction) => {
   next(new AppError('Resource not found', 404));
