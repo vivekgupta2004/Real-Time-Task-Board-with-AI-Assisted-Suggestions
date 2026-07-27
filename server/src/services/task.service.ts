@@ -1,6 +1,17 @@
 import Task, { ITask } from '../models/task.model';
+import { emitToUser, getIO } from '../socket/socket';
 import { AppError } from '../utils/appError';
 import { CreateTaskInput, UpdateTaskInput } from '../validations/task.validation';
+
+const notifyTaskEvent = (userId: string, eventName: string, payload: any): void => {
+  try {
+    emitToUser(userId, eventName, payload);
+    const io = getIO();
+    io.emit(eventName, payload);
+  } catch (error) {
+    console.error(`Failed to emit socket event ${eventName}:`, error);
+  }
+};
 
 export const createTask = async (userId: string, data: CreateTaskInput): Promise<ITask> => {
   const task = await Task.create({
@@ -8,6 +19,12 @@ export const createTask = async (userId: string, data: CreateTaskInput): Promise
     dueDate: new Date(data.dueDate),
     owner: userId,
   });
+
+  notifyTaskEvent(userId, 'task:created', {
+    event: 'task:created',
+    data: task,
+  });
+
   return task;
 };
 
@@ -40,6 +57,11 @@ export const updateTask = async (
     runValidators: true,
   });
 
+  notifyTaskEvent(userId, 'task:updated', {
+    event: 'task:updated',
+    data: updatedTask,
+  });
+
   return updatedTask!;
 };
 
@@ -54,4 +76,11 @@ export const deleteTask = async (userId: string, taskId: string): Promise<void> 
   }
 
   await task.deleteOne();
+
+  notifyTaskEvent(userId, 'task:deleted', {
+    event: 'task:deleted',
+    data: {
+      taskId,
+    },
+  });
 };
