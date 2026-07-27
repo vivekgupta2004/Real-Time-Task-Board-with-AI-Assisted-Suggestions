@@ -2,6 +2,7 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import { setupSwagger } from './config/swagger';
 
 const app: Application = express();
 
@@ -12,6 +13,17 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+setupSwagger(app);
+
+/**
+ * @openapi
+ * /:
+ *   get:
+ *     summary: Health Check Endpoint
+ *     responses:
+ *       200:
+ *         description: Task Board API is running successfully
+ */
 app.get('/', (_req: Request, res: Response) => {
   res.status(200).json({
     success: true,
