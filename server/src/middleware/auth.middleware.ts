@@ -15,6 +15,10 @@ export const authenticate = async (
     }
 
     const token = authHeader.split(' ')[1];
+    if (!token) {
+      throw new AppError('Authentication token is missing', 401);
+    }
+
     let decoded;
     try {
       decoded = verifyAccessToken(token);
@@ -24,7 +28,7 @@ export const authenticate = async (
 
     const user = await User.findById(decoded.userId);
     if (!user) {
-      throw new AppError('User not found or unauthenticated', 401);
+      throw new AppError('User no longer exists', 401);
     }
 
     req.user = user;
