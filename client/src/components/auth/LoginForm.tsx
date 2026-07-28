@@ -8,11 +8,13 @@ import toast from 'react-hot-toast';
 
 import { loginSchema, LoginFormData } from '@/utils/auth.validation';
 import { loginApi } from '@/services/auth.service';
+import { useAuthStore } from '@/store/useAuthStore';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 
 export const LoginForm = () => {
   const router = useRouter();
+  const setAuth = useAuthStore((state) => state.setAuth);
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -27,14 +29,8 @@ export const LoginForm = () => {
     setIsLoading(true);
     try {
       const response = await loginApi(data);
-      if (response.accessToken) {
-        localStorage.setItem('accessToken', response.accessToken);
-      }
-      if (response.refreshToken) {
-        localStorage.setItem('refreshToken', response.refreshToken);
-      }
-      if (response.user) {
-        localStorage.setItem('user', JSON.stringify(response.user));
+      if (response.user && response.accessToken && response.refreshToken) {
+        setAuth(response.user, response.accessToken, response.refreshToken);
       }
       toast.success(response.message || 'Login successful!');
       router.push('/dashboard');
@@ -47,7 +43,10 @@ export const LoginForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full max-w-md bg-white p-8 rounded-lg shadow-md border border-gray-100">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-4 w-full max-w-md bg-white p-8 rounded-lg shadow-md border border-gray-100"
+    >
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
         <p className="text-sm text-gray-500 mt-1">Sign in to your account</p>

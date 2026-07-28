@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '@/store/useAuthStore';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -11,11 +12,11 @@ export const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('accessToken');
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+    const token =
+      useAuthStore.getState().accessToken ||
+      (typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null);
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -25,6 +26,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
+      useAuthStore.getState().logout();
+      if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/signup')) {
+        window.location.href = '/login';
+      }
+    }
     return Promise.reject(error.response?.data || error);
   }
 );
