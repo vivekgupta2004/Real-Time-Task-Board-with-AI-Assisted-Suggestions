@@ -8,13 +8,19 @@ interface SubtaskItemProps {
   taskId: string;
   subtask: Subtask;
   onToggle: (taskId: string, subtaskId: string, currentCompleted: boolean) => void;
+  isParentCompleted?: boolean;
 }
 
-export const SubtaskItem: React.FC<SubtaskItemProps> = ({ taskId, subtask, onToggle }) => {
+export const SubtaskItem: React.FC<SubtaskItemProps> = ({
+  taskId,
+  subtask,
+  onToggle,
+  isParentCompleted = false,
+}) => {
   const isCompleted = subtask.completed;
 
   const handleClick = () => {
-    if (subtask._id) {
+    if (!isParentCompleted && subtask._id) {
       onToggle(taskId, subtask._id, isCompleted);
     }
   };
@@ -22,10 +28,12 @@ export const SubtaskItem: React.FC<SubtaskItemProps> = ({ taskId, subtask, onTog
   return (
     <div
       onClick={handleClick}
-      className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg border transition-all duration-150 cursor-pointer group ${
+      className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg border transition-all duration-150 group ${
+        isParentCompleted ? 'cursor-not-allowed opacity-90' : 'cursor-pointer'
+      } ${
         isCompleted
-          ? 'bg-emerald-50/60 border-emerald-200/80 text-emerald-900'
-          : 'bg-gray-50/70 border-gray-200 text-gray-800 hover:bg-gray-100/80 hover:border-indigo-300'
+          ? 'bg-emerald-50/70 border-emerald-200/80 text-emerald-900'
+          : 'bg-gray-50/70 border-gray-200/80 text-gray-800 hover:bg-indigo-50/60 hover:border-indigo-300'
       }`}
     >
       <div
@@ -40,7 +48,7 @@ export const SubtaskItem: React.FC<SubtaskItemProps> = ({ taskId, subtask, onTog
 
       <span
         className={`text-xs font-medium leading-tight select-none transition ${
-          isCompleted ? 'line-through text-gray-500' : 'text-gray-800'
+          isCompleted ? 'line-through text-emerald-800/70' : 'text-gray-800'
         }`}
       >
         {subtask.title}
@@ -50,3 +58,4 @@ export const SubtaskItem: React.FC<SubtaskItemProps> = ({ taskId, subtask, onTog
 };
 
 export default SubtaskItem;
+

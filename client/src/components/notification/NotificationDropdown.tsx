@@ -45,9 +45,12 @@ export const NotificationDropdown = () => {
 
         <div className="max-h-80 overflow-y-auto divide-y divide-gray-100">
           {notifications.length === 0 ? (
-            <div className="p-8 text-center text-gray-400 flex flex-col items-center justify-center gap-2">
-              <BellOff className="w-8 h-8 text-gray-300" />
-              <p className="text-xs font-medium text-gray-500">No notifications yet</p>
+            <div className="p-10 text-center text-gray-400 flex flex-col items-center justify-center gap-2">
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
+                <BellOff className="w-6 h-6 text-gray-400" />
+              </div>
+              <p className="text-sm font-semibold text-gray-800">All Caught Up!</p>
+              <p className="text-xs text-gray-500">You don't have any notifications right now.</p>
             </div>
           ) : (
             notifications.map((notif) => (
@@ -61,3 +64,4 @@ export const NotificationDropdown = () => {
 };
 
 export default NotificationDropdown;
+

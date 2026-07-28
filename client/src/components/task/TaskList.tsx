@@ -4,10 +4,20 @@ import React, { useEffect } from 'react';
 import { useTaskStore } from '@/store/useTaskStore';
 import TaskCard from './TaskCard';
 import { sortTasks } from '@/utils/taskSort';
-import { AlertTriangle, ClipboardList, RefreshCw } from 'lucide-react';
+import { AlertTriangle, ClipboardList, RefreshCw, SearchX, Plus } from 'lucide-react';
 
 export const TaskList = () => {
-  const { tasks, isLoading, error, searchQuery, statusFilter, fetchTasks } = useTaskStore();
+  const {
+    tasks,
+    isLoading,
+    error,
+    searchQuery,
+    statusFilter,
+    fetchTasks,
+    openCreateModal,
+    setSearchQuery,
+    setStatusFilter,
+  } = useTaskStore();
 
   useEffect(() => {
     fetchTasks();
@@ -25,13 +35,13 @@ export const TaskList = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[1, 2, 3, 4, 5, 6].map((n) => (
-          <div key={n} className="h-48 bg-white border border-gray-200 rounded-xl p-5 animate-pulse flex flex-col justify-between">
+          <div key={n} className="h-52 bg-white border border-gray-200 rounded-2xl p-5 animate-pulse flex flex-col justify-between shadow-sm">
             <div className="space-y-3">
-              <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-              <div className="h-5 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-full"></div>
+              <div className="h-4 bg-gray-200 rounded-full w-1/3"></div>
+              <div className="h-5 bg-gray-200 rounded-lg w-3/4"></div>
+              <div className="h-4 bg-gray-200 rounded-lg w-full"></div>
             </div>
-            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+            <div className="h-3 bg-gray-200 rounded-full w-1/2"></div>
           </div>
         ))}
       </div>
@@ -40,13 +50,13 @@ export const TaskList = () => {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center max-w-md mx-auto my-8">
-        <AlertTriangle className="w-10 h-10 text-red-500 mx-auto mb-3" />
-        <h3 className="text-lg font-semibold text-red-800">Failed to Load Tasks</h3>
-        <p className="text-sm text-red-600 mt-1 mb-4">{error}</p>
+      <div className="bg-red-50/80 border border-red-200 rounded-2xl p-8 text-center max-w-md mx-auto my-8 shadow-sm">
+        <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-3 stroke-[1.8]" />
+        <h3 className="text-lg font-bold text-red-900">Failed to Load Tasks</h3>
+        <p className="text-sm text-red-700 mt-1 mb-5">{error}</p>
         <button
           onClick={fetchTasks}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-semibold shadow-sm transition"
         >
           <RefreshCw className="w-4 h-4" />
           <span>Retry</span>
@@ -56,15 +66,48 @@ export const TaskList = () => {
   }
 
   if (sortedTasks.length === 0) {
+    const hasActiveFilters = searchQuery || statusFilter !== 'all';
+
     return (
-      <div className="bg-white border border-dashed border-gray-300 rounded-xl p-12 text-center max-w-md mx-auto my-8">
-        <ClipboardList className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-        <h3 className="text-lg font-medium text-gray-800">No Tasks Found</h3>
-        <p className="text-sm text-gray-500 mt-1">
-          {searchQuery || statusFilter !== 'all'
-            ? 'Try adjusting your search query or status filter.'
-            : 'You currently have no tasks created.'}
-        </p>
+      <div className="bg-white border border-dashed border-gray-300 rounded-2xl p-12 text-center max-w-md mx-auto my-8 shadow-sm">
+        {hasActiveFilters ? (
+          <>
+            <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <SearchX className="w-8 h-8 stroke-[1.75]" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">No Matching Tasks Found</h3>
+            <p className="text-xs text-gray-500 mt-1.5 mb-5 leading-relaxed">
+              We couldn't find any tasks matching your current search or filter criteria.
+            </p>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setStatusFilter('all');
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-semibold transition"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Reset Filters</span>
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <ClipboardList className="w-8 h-8 stroke-[1.75]" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">No Tasks Created Yet</h3>
+            <p className="text-xs text-gray-500 mt-1.5 mb-5 leading-relaxed">
+              Get started by creating your first task or using AI to generate subtasks automatically!
+            </p>
+            <button
+              onClick={openCreateModal}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-md shadow-indigo-600/20 transition"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create Task</span>
+            </button>
+          </>
+        )}
       </div>
     );
   }
@@ -79,3 +122,4 @@ export const TaskList = () => {
 };
 
 export default TaskList;
+

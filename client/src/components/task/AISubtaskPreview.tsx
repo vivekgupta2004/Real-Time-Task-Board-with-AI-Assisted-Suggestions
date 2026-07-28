@@ -11,6 +11,7 @@ interface AISubtaskPreviewProps {
   onToggleComplete: (index: number) => void;
   onRemove: (index: number) => void;
   onAddSubtask: () => void;
+  readOnly?: boolean;
 }
 
 export const AISubtaskPreview: React.FC<AISubtaskPreviewProps> = ({
@@ -19,6 +20,7 @@ export const AISubtaskPreview: React.FC<AISubtaskPreviewProps> = ({
   onToggleComplete,
   onRemove,
   onAddSubtask,
+  readOnly = false,
 }) => {
   if (subtasks.length === 0) return null;
 
@@ -29,14 +31,16 @@ export const AISubtaskPreview: React.FC<AISubtaskPreviewProps> = ({
           <ListChecks className="w-4 h-4 text-indigo-600" />
           <span>Subtasks ({subtasks.filter((s) => s.completed).length}/{subtasks.length})</span>
         </div>
-        <button
-          type="button"
-          onClick={onAddSubtask}
-          className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700 transition"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Add Subtask</span>
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={onAddSubtask}
+            className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700 transition"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Subtask</span>
+          </button>
+        )}
       </div>
 
       <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
@@ -49,6 +53,7 @@ export const AISubtaskPreview: React.FC<AISubtaskPreviewProps> = ({
             onTitleChange={onTitleChange}
             onToggleComplete={onToggleComplete}
             onRemove={onRemove}
+            readOnly={readOnly}
           />
         ))}
       </div>
@@ -57,3 +62,4 @@ export const AISubtaskPreview: React.FC<AISubtaskPreviewProps> = ({
 };
 
 export default AISubtaskPreview;
+

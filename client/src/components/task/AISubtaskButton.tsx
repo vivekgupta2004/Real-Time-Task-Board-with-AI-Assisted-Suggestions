@@ -14,21 +14,29 @@ export const AISubtaskButton: React.FC<AISubtaskButtonProps> = ({
   isLoading,
   disabled,
 }) => {
+  const isButtonDisabled = disabled || isLoading;
+
   return (
     <button
       type="button"
       onClick={onClick}
-      disabled={disabled || isLoading}
-      className="inline-flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg shadow-sm transition duration-150 cursor-pointer"
+      disabled={isButtonDisabled}
+      title={disabled ? 'Enter both title and description to generate AI subtasks.' : 'Click to generate AI subtasks'}
+      className={`inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-lg shadow-sm transition-all duration-150 ${
+        isButtonDisabled
+          ? 'bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-300 opacity-70 shadow-none'
+          : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white cursor-pointer hover:from-purple-700 hover:to-indigo-700 hover:shadow-md'
+      }`}
     >
       {isLoading ? (
-        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-600" />
       ) : (
-        <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
+        <Sparkles className={`w-3.5 h-3.5 ${disabled ? 'text-gray-400' : 'text-amber-300 animate-pulse'}`} />
       )}
-      <span>{isLoading ? 'Generating AI Subtasks...' : 'Suggest Subtasks'}</span>
+      <span>{isLoading ? 'Generating Subtasks...' : 'Suggest Subtasks'}</span>
     </button>
   );
 };
 
 export default AISubtaskButton;
+

@@ -43,6 +43,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   };
 
   const handleToggleSubtask = async (taskId: string, subtaskId: string, currentCompleted: boolean) => {
+    if (isCompleted) return;
     try {
       await toggleSubtask(taskId, subtaskId, !currentCompleted);
     } catch (error: any) {
@@ -51,20 +52,26 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between group">
+    <div
+      className={`rounded-2xl border p-5 transition-all duration-200 flex flex-col justify-between group shadow-sm hover:shadow-md ${
+        isCompleted
+          ? 'bg-emerald-50/20 border-emerald-200/80 opacity-90 hover:opacity-100'
+          : 'bg-white border-gray-200 hover:border-indigo-200'
+      }`}
+    >
       <div>
         <div className="flex items-center justify-between gap-2 mb-3">
           <span
             className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold capitalize ${
               isCompleted
-                ? 'bg-emerald-100 text-emerald-800'
+                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                 : task.status === 'in_progress'
-                ? 'bg-blue-100 text-blue-800'
-                : 'bg-amber-100 text-amber-800'
+                ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                : 'bg-amber-100 text-amber-800 border border-amber-200'
             }`}
           >
             {isCompleted ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-            {task.status.replace('_', ' ')}
+            {isCompleted ? 'Completed' : task.status.replace('_', ' ')}
           </span>
 
           <div className="flex items-center gap-2">
@@ -83,13 +90,15 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
             )}
 
             <div className="flex items-center gap-1 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                onClick={() => openEditModal(task)}
-                className="p-1 rounded text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition"
-                title="Edit Task"
-              >
-                <Pencil className="w-4 h-4" />
-              </button>
+              {!isCompleted && (
+                <button
+                  onClick={() => openEditModal(task)}
+                  className="p-1 rounded text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition"
+                  title="Edit Task"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+              )}
               <button
                 onClick={() => openDeleteModal(task)}
                 className="p-1 rounded text-gray-400 hover:text-red-600 hover:bg-red-50 transition"
@@ -101,7 +110,13 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
           </div>
         </div>
 
-        <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-1">{task.title}</h3>
+        <h3
+          className={`font-semibold text-lg mb-2 line-clamp-1 ${
+            isCompleted ? 'text-gray-700 line-through' : 'text-gray-900'
+          }`}
+        >
+          {task.title}
+        </h3>
         <p className="text-sm text-gray-600 mb-4 line-clamp-2 leading-relaxed">{task.description}</p>
 
         {hasSubtasks && (
@@ -109,6 +124,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
             taskId={task._id}
             subtasks={task.subtasks!}
             onToggle={handleToggleSubtask}
+            isParentCompleted={isCompleted}
           />
         )}
       </div>
@@ -133,7 +149,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
         </div>
 
         {isCompleted && task.completedAt && (
-          <div className="text-xs text-emerald-700 font-medium flex items-center gap-1 bg-emerald-50 px-2.5 py-1 rounded-md">
+          <div className="text-xs text-emerald-700 font-medium flex items-center gap-1 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-100">
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
             <span>Completed on: {formatLocalDateTime(task.completedAt)}</span>
           </div>
@@ -144,3 +160,4 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 };
 
 export default TaskCard;
+
