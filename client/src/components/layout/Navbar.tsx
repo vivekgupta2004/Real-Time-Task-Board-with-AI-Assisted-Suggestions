@@ -4,6 +4,7 @@ import React from 'react';
 import { LayoutDashboard, LogOut, User as UserIcon } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
+import NotificationBell from '@/components/notification/NotificationBell';
 import toast from 'react-hot-toast';
 
 export const Navbar = () => {
@@ -26,6 +27,7 @@ export const Navbar = () => {
       <div className="flex items-center gap-4">
         {isAuthenticated && user ? (
           <div className="flex items-center gap-4">
+            <NotificationBell />
             <div className="flex items-center gap-2 text-sm text-gray-700 font-medium">
               <UserIcon className="w-4 h-4 text-gray-500" />
               <span>{user.name}</span>

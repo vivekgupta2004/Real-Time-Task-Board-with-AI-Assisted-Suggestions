@@ -7,6 +7,7 @@ import { AppError } from './utils/appError';
 import { errorHandler } from './middleware/error.middleware';
 import authRoutes from './routes/auth.routes';
 import taskRoutes from './routes/task.routes';
+import notificationRoutes from './routes/notification.routes';
 
 const app: Application = express();
 
@@ -37,6 +38,7 @@ app.get('/', (_req: Request, res: Response) => {
 
 app.use('/auth', authRoutes);
 app.use('/tasks', taskRoutes);
+app.use('/notifications', notificationRoutes);
 
 app.use((_req: Request, _res: Response, next: NextFunction) => {
   next(new AppError('Resource not found', 404));
