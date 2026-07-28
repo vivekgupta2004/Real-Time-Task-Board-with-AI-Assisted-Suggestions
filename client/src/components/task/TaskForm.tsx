@@ -13,7 +13,7 @@ import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import AISubtaskButton from './AISubtaskButton';
 import AISubtaskPreview from './AISubtaskPreview';
-import { Lock } from 'lucide-react';
+import { Lock, Loader2 } from 'lucide-react';
 
 const formatForDateTimeLocal = (dateStr?: string | null): string => {
   if (!dateStr) return '';
@@ -56,6 +56,7 @@ export const TaskForm = () => {
 
   const isAiDisabled =
     isReadOnly ||
+    isAiLoading ||
     !watchTitle ||
     watchTitle.trim().length === 0 ||
     !watchDescription ||
@@ -82,7 +83,7 @@ export const TaskForm = () => {
   }, [modalMode, selectedTask, reset]);
 
   const handleSuggestSubtasks = async () => {
-    if (isAiDisabled) return;
+    if (isAiDisabled || isAiLoading) return;
 
     setIsAiLoading(true);
     try {
@@ -133,6 +134,11 @@ export const TaskForm = () => {
       return;
     }
 
+    if (isAiLoading) {
+      toast.error('Generating AI subtasks, please wait...');
+      return;
+    }
+
     try {
       const validSubtasks = subtasks.filter((s) => s.title.trim().length > 0);
 
@@ -171,7 +177,7 @@ export const TaskForm = () => {
         <Input
           label="Title"
           placeholder="Enter task title"
-          disabled={isReadOnly}
+          disabled={isReadOnly || isAiLoading}
           {...register('title')}
           error={errors.title?.message}
         />
@@ -181,7 +187,7 @@ export const TaskForm = () => {
         <label className="text-sm font-medium text-gray-700">Description</label>
         <textarea
           rows={3}
-          disabled={isReadOnly}
+          disabled={isReadOnly || isAiLoading}
           placeholder="Enter task description"
           className={`w-full px-3 py-2 border rounded-md outline-none transition text-gray-900 bg-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed ${
             errors.description ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'
@@ -195,7 +201,7 @@ export const TaskForm = () => {
         <div className="w-full flex flex-col gap-1">
           <label className="text-sm font-medium text-gray-700">Priority</label>
           <select
-            disabled={isReadOnly}
+            disabled={isReadOnly || isAiLoading}
             className="w-full px-3 py-2 border border-gray-300 rounded-md outline-none transition text-gray-900 bg-white focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-600 disabled:cursor-not-allowed"
             {...register('priority')}
           >
@@ -209,7 +215,7 @@ export const TaskForm = () => {
           label="Due Date"
           type="datetime-local"
           min={minDateTime}
-          disabled={isReadOnly}
+          disabled={isReadOnly || isAiLoading}
           {...register('dueDate')}
           error={errors.dueDate?.message}
         />
@@ -221,26 +227,46 @@ export const TaskForm = () => {
         onToggleComplete={handleToggleSubtask}
         onRemove={handleRemoveSubtask}
         onAddSubtask={handleAddSubtask}
-        readOnly={isReadOnly}
+        readOnly={isReadOnly || isAiLoading}
       />
 
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-        <button
-          type="button"
-          onClick={closeModal}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition"
-        >
-          {isReadOnly ? 'Close' : 'Cancel'}
-        </button>
-        {!isReadOnly && (
-          <Button type="submit" isLoading={isSubmitting} className="w-auto px-6">
-            {modalMode === 'create' ? 'Create Task' : 'Save Changes'}
-          </Button>
+      <div className="flex flex-col gap-2 pt-4 border-t border-gray-100">
+        {isAiLoading && (
+          <div className="flex items-center gap-2 text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-xl p-2.5 animate-pulse">
+            <Loader2 className="w-4 h-4 animate-spin shrink-0 text-indigo-600" />
+            <span>Generating AI subtasks, please wait...</span>
+          </div>
         )}
+
+        <div className="flex items-center justify-end gap-3">
+          <button
+            type="button"
+            onClick={closeModal}
+            disabled={isAiLoading || isSubmitting}
+            className="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isReadOnly ? 'Close' : 'Cancel'}
+          </button>
+          {!isReadOnly && (
+            <Button
+              type="submit"
+              isLoading={isSubmitting || isAiLoading}
+              disabled={isSubmitting || isAiLoading}
+              className="w-auto px-6"
+            >
+              {isAiLoading
+                ? 'Generating...'
+                : modalMode === 'create'
+                ? 'Create Task'
+                : 'Save Changes'}
+            </Button>
+          )}
+        </div>
       </div>
     </form>
   );
 };
 
 export default TaskForm;
+
 
