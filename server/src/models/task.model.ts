@@ -9,7 +9,9 @@ export interface ITask extends Document {
   title: string;
   description: string;
   status: 'pending' | 'completed';
+  priority: 'low' | 'medium' | 'high';
   dueDate: Date;
+  completedAt: Date | null;
   owner: Types.ObjectId;
   subtasks: ISubtask[];
   createdAt: Date;
@@ -51,9 +53,18 @@ const taskSchema = new Schema<ITask>(
       enum: ['pending', 'completed'],
       default: 'pending',
     },
+    priority: {
+      type: String,
+      enum: ['low', 'medium', 'high'],
+      default: 'medium',
+    },
     dueDate: {
       type: Date,
       required: [true, 'Due date is required'],
+    },
+    completedAt: {
+      type: Date,
+      default: null,
     },
     owner: {
       type: Schema.Types.ObjectId,
@@ -69,6 +80,7 @@ const taskSchema = new Schema<ITask>(
 );
 
 taskSchema.index({ owner: 1, status: 1 });
+taskSchema.index({ owner: 1, priority: 1 });
 
 export const Task = models.Task || model<ITask>('Task', taskSchema);
 export default Task;

@@ -13,6 +13,7 @@ export interface Task {
   status: TaskStatus;
   priority?: 'low' | 'medium' | 'high';
   dueDate: string;
+  completedAt?: string | null;
   owner: string;
   subtasks?: Subtask[];
   createdAt: string;

@@ -16,7 +16,11 @@ export const createTask = async (req: Request, res: Response, next: NextFunction
 
 export const getTasks = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const tasks = await taskService.getUserTasks(req.user!._id.toString());
+    const { status, priority } = req.query;
+    const tasks = await taskService.getUserTasks(req.user!._id.toString(), {
+      status: typeof status === 'string' ? status : undefined,
+      priority: typeof priority === 'string' ? priority : undefined,
+    });
     res.status(200).json({
       success: true,
       message: 'Tasks fetched successfully',
@@ -34,6 +38,20 @@ export const updateTask = async (req: Request, res: Response, next: NextFunction
     res.status(200).json({
       success: true,
       message: 'Task updated successfully',
+      data: task,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const completeTask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const taskId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const task = await taskService.completeTask(req.user!._id.toString(), taskId);
+    res.status(200).json({
+      success: true,
+      message: 'Task completed successfully',
       data: task,
     });
   } catch (error) {

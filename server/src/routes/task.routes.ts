@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createTask, getTasks, updateTask, deleteTask } from '../controllers/task.controller';
+import { createTask, getTasks, updateTask, completeTask, deleteTask } from '../controllers/task.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { validateRequest } from '../middleware/validate.middleware';
 import { createTaskSchema, updateTaskSchema } from '../validations/task.validation';
@@ -25,10 +25,10 @@ router.use(authenticate);
  *         description:
  *           type: string
  *           example: Complete initial backend setup and endpoints
- *         status:
+ *         priority:
  *           type: string
- *           enum: [pending, completed]
- *           example: pending
+ *           enum: [low, medium, high]
+ *           example: medium
  *         dueDate:
  *           type: string
  *           format: date-time
@@ -40,9 +40,10 @@ router.use(authenticate);
  *           type: string
  *         description:
  *           type: string
- *         status:
+ *         priority:
  *           type: string
- *           enum: [pending, completed]
+ *           enum: [low, medium, high]
+ *           example: high
  *         dueDate:
  *           type: string
  *           format: date-time
@@ -57,9 +58,17 @@ router.use(authenticate);
  *           type: string
  *         status:
  *           type: string
+ *           enum: [pending, completed]
+ *         priority:
+ *           type: string
+ *           enum: [low, medium, high]
  *         dueDate:
  *           type: string
  *           format: date-time
+ *         completedAt:
+ *           type: string
+ *           format: date-time
+ *           nullable: true
  *         owner:
  *           type: string
  *         createdAt:
@@ -79,6 +88,19 @@ router.use(authenticate);
  *       - Tasks
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [pending, completed]
+ *         description: Filter tasks by status
+ *       - in: query
+ *         name: priority
+ *         schema:
+ *           type: string
+ *           enum: [low, medium, high]
+ *         description: Filter tasks by priority
  *     responses:
  *       200:
  *         description: Tasks fetched successfully
@@ -147,6 +169,36 @@ router.post('/', validateRequest(createTaskSchema), createTask);
  *         description: Task not found
  */
 router.put('/:id', validateRequest(updateTaskSchema), updateTask);
+
+/**
+ * @openapi
+ * /tasks/{id}/complete:
+ *   patch:
+ *     summary: Mark a task as completed
+ *     tags:
+ *       - Tasks
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Task ID
+ *     responses:
+ *       200:
+ *         description: Task completed successfully
+ *       400:
+ *         description: Task is already completed
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (Not task owner)
+ *       404:
+ *         description: Task not found
+ */
+router.patch('/:id/complete', completeTask);
 
 /**
  * @openapi

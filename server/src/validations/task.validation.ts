@@ -10,7 +10,7 @@ export const createTaskSchema = z.object({
     .string({ required_error: 'Description is required' })
     .trim()
     .max(1000, 'Description cannot exceed 1000 characters'),
-  status: z.enum(['pending', 'completed']).optional(),
+  priority: z.enum(['low', 'medium', 'high']).optional(),
   dueDate: z
     .string({ required_error: 'Due date is required' })
     .refine((val) => !isNaN(Date.parse(val)), { message: 'Invalid date format' })
@@ -29,7 +29,7 @@ export const updateTaskSchema = z.object({
     .trim()
     .max(1000, 'Description cannot exceed 1000 characters')
     .optional(),
-  status: z.enum(['pending', 'completed']).optional(),
+  priority: z.enum(['low', 'medium', 'high']).optional(),
   dueDate: z
     .string()
     .refine((val) => !isNaN(Date.parse(val)), { message: 'Invalid date format' })

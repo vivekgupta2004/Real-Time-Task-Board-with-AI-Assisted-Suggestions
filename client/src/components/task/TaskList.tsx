@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { useTaskStore } from '@/store/useTaskStore';
 import TaskCard from './TaskCard';
+import { sortTasks } from '@/utils/taskSort';
 import { AlertTriangle, ClipboardList, RefreshCw } from 'lucide-react';
 
 export const TaskList = () => {
@@ -17,6 +18,8 @@ export const TaskList = () => {
     const matchesStatus = statusFilter === 'all' || task.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const sortedTasks = sortTasks(filteredTasks);
 
   if (isLoading) {
     return (
@@ -52,7 +55,7 @@ export const TaskList = () => {
     );
   }
 
-  if (filteredTasks.length === 0) {
+  if (sortedTasks.length === 0) {
     return (
       <div className="bg-white border border-dashed border-gray-300 rounded-xl p-12 text-center max-w-md mx-auto my-8">
         <ClipboardList className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -68,7 +71,7 @@ export const TaskList = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredTasks.map((task) => (
+      {sortedTasks.map((task) => (
         <TaskCard key={task._id} task={task} />
       ))}
     </div>
