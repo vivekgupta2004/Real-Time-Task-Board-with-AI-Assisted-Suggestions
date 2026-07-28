@@ -11,6 +11,7 @@ import { loginApi } from '@/services/auth.service';
 import { useAuthStore } from '@/store/useAuthStore';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import Link from 'next/link';
 
 export const LoginForm = () => {
   const router = useRouter();
@@ -45,17 +46,18 @@ export const LoginForm = () => {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="space-y-4 w-full max-w-md bg-white p-8 rounded-lg shadow-md border border-gray-100"
+      className="space-y-5 w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-gray-100"
     >
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Welcome Back</h2>
-        <p className="text-sm text-gray-500 mt-1">Sign in to your account</p>
+        <p className="text-sm text-gray-500 mt-1">Sign in to your task management account</p>
       </div>
 
       <Input
         label="Email Address"
         type="email"
-        placeholder="you@example.com"
+        placeholder="you@gmail.com"
+        disabled={isLoading}
         {...register('email')}
         error={errors.email?.message}
       />
@@ -64,22 +66,24 @@ export const LoginForm = () => {
         label="Password"
         type="password"
         placeholder="••••••••"
+        disabled={isLoading}
         {...register('password')}
         error={errors.password?.message}
       />
 
-      <Button type="submit" isLoading={isLoading}>
-        Sign In
+      <Button type="submit" isLoading={isLoading} disabled={isLoading} className="w-full mt-2">
+        {isLoading ? 'Signing In...' : 'Sign In'}
       </Button>
 
       <p className="text-center text-sm text-gray-600 mt-4">
         Don&apos;t have an account?{' '}
-        <a href="/signup" className="text-indigo-600 font-medium hover:underline">
+        <Link href="/signup" className="text-indigo-600 font-semibold hover:underline">
           Sign up
-        </a>
+        </Link>
       </p>
     </form>
   );
 };
 
 export default LoginForm;
+

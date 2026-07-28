@@ -10,6 +10,7 @@ import { signupSchema, SignupFormData } from '@/utils/auth.validation';
 import { signupApi } from '@/services/auth.service';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import Link from 'next/link';
 
 export const SignupForm = () => {
   const router = useRouter();
@@ -38,7 +39,10 @@ export const SignupForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 w-full max-w-md bg-white p-8 rounded-lg shadow-md border border-gray-100">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-4 w-full max-w-md bg-white p-8 rounded-2xl shadow-xl border border-gray-100"
+    >
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Create Account</h2>
         <p className="text-sm text-gray-500 mt-1">Get started with Real-Time Task Board</p>
@@ -48,6 +52,7 @@ export const SignupForm = () => {
         label="Full Name"
         type="text"
         placeholder="John Doe"
+        disabled={isLoading}
         {...register('name')}
         error={errors.name?.message}
       />
@@ -55,31 +60,39 @@ export const SignupForm = () => {
       <Input
         label="Email Address"
         type="email"
-        placeholder="you@example.com"
+        placeholder="you@gmail.com"
+        disabled={isLoading}
         {...register('email')}
         error={errors.email?.message}
       />
 
-      <Input
-        label="Password"
-        type="password"
-        placeholder="••••••••"
-        {...register('password')}
-        error={errors.password?.message}
-      />
+      <div>
+        <Input
+          label="Password"
+          type="password"
+          placeholder="••••••••"
+          disabled={isLoading}
+          {...register('password')}
+          error={errors.password?.message}
+        />
+        <p className="text-[11px] text-gray-500 mt-1">
+          Must be at least 8 chars with uppercase, lowercase, number & special char.
+        </p>
+      </div>
 
-      <Button type="submit" isLoading={isLoading}>
-        Create Account
+      <Button type="submit" isLoading={isLoading} disabled={isLoading} className="w-full mt-2">
+        {isLoading ? 'Creating Account...' : 'Create Account'}
       </Button>
 
       <p className="text-center text-sm text-gray-600 mt-4">
         Already have an account?{' '}
-        <a href="/login" className="text-indigo-600 font-medium hover:underline">
+        <Link href="/login" className="text-indigo-600 font-semibold hover:underline">
           Sign in
-        </a>
+        </Link>
       </p>
     </form>
   );
 };
 
 export default SignupForm;
+
