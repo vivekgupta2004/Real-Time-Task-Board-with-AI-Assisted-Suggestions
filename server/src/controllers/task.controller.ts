@@ -72,3 +72,47 @@ export const deleteTask = async (req: Request, res: Response, next: NextFunction
     next(error);
   }
 };
+
+export const addSubtask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const taskId = Array.isArray(req.params.taskId) ? req.params.taskId[0] : req.params.taskId;
+    const task = await taskService.addSubtask(req.user!._id.toString(), taskId, req.body);
+    res.status(201).json({
+      success: true,
+      message: 'Subtask added successfully',
+      data: task,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateSubtask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const taskId = Array.isArray(req.params.taskId) ? req.params.taskId[0] : req.params.taskId;
+    const subtaskId = Array.isArray(req.params.subtaskId) ? req.params.subtaskId[0] : req.params.subtaskId;
+    const task = await taskService.updateSubtask(req.user!._id.toString(), taskId, subtaskId, req.body);
+    res.status(200).json({
+      success: true,
+      message: 'Subtask updated successfully',
+      data: task,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteSubtask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const taskId = Array.isArray(req.params.taskId) ? req.params.taskId[0] : req.params.taskId;
+    const subtaskId = Array.isArray(req.params.subtaskId) ? req.params.subtaskId[0] : req.params.subtaskId;
+    const task = await taskService.deleteSubtask(req.user!._id.toString(), taskId, subtaskId);
+    res.status(200).json({
+      success: true,
+      message: 'Subtask deleted successfully',
+      data: task,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

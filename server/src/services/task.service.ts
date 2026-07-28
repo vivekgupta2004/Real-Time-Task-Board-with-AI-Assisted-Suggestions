@@ -2,7 +2,7 @@ import Task, { ITask } from '../models/task.model';
 import { emitToUser } from '../socket/socket';
 import { createNotification } from './notification.service';
 import { AppError } from '../utils/appError';
-import { CreateTaskInput, UpdateTaskInput } from '../validations/task.validation';
+import { CreateTaskInput, UpdateTaskInput, CreateSubtaskInput, UpdateSubtaskInput } from '../validations/task.validation';
 
 const priorityWeight: Record<string, number> = {
   high: 1,
@@ -32,6 +32,38 @@ const notifyTaskEvent = (userId: string, eventName: string, payload: any): void 
   }
 };
 
+const recalculateSubtaskStatus = async (userId: string, task: ITask): Promise<void> => {
+  if (!task.subtasks || task.subtasks.length === 0) {
+    return;
+  }
+
+  const previousStatus = task.status;
+  const total = task.subtasks.length;
+  const completedCount = task.subtasks.filter((s: any) => s.completed).length;
+
+  if (completedCount === 0) {
+    task.status = 'pending';
+    task.completedAt = null;
+  } else if (completedCount < total) {
+    task.status = 'in_progress';
+    task.completedAt = null;
+  } else {
+    task.status = 'completed';
+    if (!task.completedAt) {
+      task.completedAt = new Date();
+    }
+  }
+
+  if (previousStatus !== 'completed' && task.status === 'completed') {
+    await createNotification({
+      userId,
+      title: 'Task Completed',
+      message: `Your task '${task.title}' has been completed.`,
+      type: 'completed',
+    });
+  }
+};
+
 export const createTask = async (userId: string, data: CreateTaskInput): Promise<ITask> => {
   const dueDate = new Date(data.dueDate);
   if (isNaN(dueDate.getTime()) || dueDate <= new Date()) {
@@ -46,6 +78,7 @@ export const createTask = async (userId: string, data: CreateTaskInput): Promise
     status: 'pending',
     completedAt: null,
     owner: userId,
+    subtasks: [],
   });
 
   notifyTaskEvent(userId, 'task:created', {
@@ -73,9 +106,10 @@ export const getUserTasks = async (
   const tasks = await Task.find(query);
 
   tasks.sort((a, b) => {
-    // 1. Pending tasks first, Completed tasks at the bottom
+    // 1. Pending/In_Progress tasks first, Completed tasks at the bottom
     if (a.status !== b.status) {
-      return a.status === 'pending' ? -1 : 1;
+      if (a.status === 'completed') return 1;
+      if (b.status === 'completed') return -1;
     }
 
     // 2. Sort by Due Date & Due Time ascending (nearest deadline first)
@@ -161,6 +195,14 @@ export const completeTask = async (userId: string, taskId: string): Promise<ITas
   const utcNow = new Date();
   task.status = 'completed';
   task.completedAt = utcNow;
+
+  if (task.subtasks && task.subtasks.length > 0) {
+    task.subtasks.forEach((s: any) => {
+      s.completed = true;
+      s.completedAt = utcNow;
+    });
+  }
+
   await task.save();
 
   notifyTaskEvent(userId, 'task:updated', {
@@ -196,4 +238,104 @@ export const deleteTask = async (userId: string, taskId: string): Promise<void> 
       taskId,
     },
   });
+};
+
+export const addSubtask = async (
+  userId: string,
+  taskId: string,
+  data: CreateSubtaskInput
+): Promise<ITask> => {
+  const task = await Task.findById(taskId);
+  if (!task) {
+    throw new AppError('Task not found', 404);
+  }
+  if (task.owner.toString() !== userId) {
+    throw new AppError('You do not have permission to modify this task', 403);
+  }
+
+  task.subtasks.push({
+    title: data.title,
+    completed: false,
+    completedAt: null,
+  } as any);
+
+  await recalculateSubtaskStatus(userId, task);
+  await task.save();
+
+  notifyTaskEvent(userId, 'task:updated', {
+    event: 'task:updated',
+    data: task,
+  });
+
+  return task;
+};
+
+export const updateSubtask = async (
+  userId: string,
+  taskId: string,
+  subtaskId: string,
+  data: UpdateSubtaskInput
+): Promise<ITask> => {
+  const task = await Task.findById(taskId);
+  if (!task) {
+    throw new AppError('Task not found', 404);
+  }
+  if (task.owner.toString() !== userId) {
+    throw new AppError('You do not have permission to modify this task', 403);
+  }
+
+  const subtask = task.subtasks.id(subtaskId);
+  if (!subtask) {
+    throw new AppError('Subtask not found', 404);
+  }
+
+  if (data.title !== undefined) {
+    subtask.title = data.title;
+  }
+
+  if (data.completed !== undefined) {
+    subtask.completed = data.completed;
+    subtask.completedAt = data.completed ? new Date() : null;
+  }
+
+  await recalculateSubtaskStatus(userId, task);
+  await task.save();
+
+  notifyTaskEvent(userId, 'task:updated', {
+    event: 'task:updated',
+    data: task,
+  });
+
+  return task;
+};
+
+export const deleteSubtask = async (
+  userId: string,
+  taskId: string,
+  subtaskId: string
+): Promise<ITask> => {
+  const task = await Task.findById(taskId);
+  if (!task) {
+    throw new AppError('Task not found', 404);
+  }
+  if (task.owner.toString() !== userId) {
+    throw new AppError('You do not have permission to modify this task', 403);
+  }
+
+  const subtask = task.subtasks.id(subtaskId);
+  if (!subtask) {
+    throw new AppError('Subtask not found', 404);
+  }
+
+  task.subtasks.pull(subtaskId);
+
+  await recalculateSubtaskStatus(userId, task);
+  await task.save();
+
+  notifyTaskEvent(userId, 'task:updated', {
+    event: 'task:updated',
+    data: task,
+  });
+
+  return task;
 };

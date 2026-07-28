@@ -1,14 +1,16 @@
 {
-  "name": "task-board-server",
+  "name": "task-management-server",
   "version": "1.0.0",
-  "description": "Real-Time Task Board Backend API",
+  "description": "Production-ready Real-Time Task Board Server",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -16,7 +18,7 @@
     "firebase-admin": "^13.0.1",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.9.3",
+    "mongoose": "^8.9.0",
     "morgan": "^1.10.0",
     "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",

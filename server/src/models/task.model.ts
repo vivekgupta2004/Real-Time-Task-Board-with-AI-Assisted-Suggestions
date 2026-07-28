@@ -1,19 +1,22 @@
 import { Schema, model, models, Document, Types } from 'mongoose';
 
 export interface ISubtask {
+  _id: Types.ObjectId;
   title: string;
   completed: boolean;
+  completedAt?: Date | null;
+  createdAt?: Date;
 }
 
 export interface ITask extends Document {
   title: string;
   description: string;
-  status: 'pending' | 'completed';
+  status: 'pending' | 'in_progress' | 'completed';
   priority: 'low' | 'medium' | 'high';
   dueDate: Date;
   completedAt: Date | null;
   owner: Types.ObjectId;
-  subtasks: ISubtask[];
+  subtasks: Types.DocumentArray<Document & ISubtask>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,8 +32,12 @@ const subtaskSchema = new Schema<ISubtask>(
       type: Boolean,
       default: false,
     },
+    completedAt: {
+      type: Date,
+      default: null,
+    },
   },
-  { _id: true }
+  { _id: true, timestamps: { createdAt: true, updatedAt: false } }
 );
 
 const taskSchema = new Schema<ITask>(
@@ -50,7 +57,7 @@ const taskSchema = new Schema<ITask>(
     },
     status: {
       type: String,
-      enum: ['pending', 'completed'],
+      enum: ['pending', 'in_progress', 'completed'],
       default: 'pending',
     },
     priority: {

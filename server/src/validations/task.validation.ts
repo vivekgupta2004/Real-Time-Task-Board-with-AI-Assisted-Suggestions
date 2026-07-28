@@ -37,5 +37,25 @@ export const updateTaskSchema = z.object({
     .optional(),
 });
 
+export const createSubtaskSchema = z.object({
+  title: z
+    .string({ required_error: 'Subtask title is required' })
+    .trim()
+    .min(1, 'Subtask title is required')
+    .max(100, 'Subtask title cannot exceed 100 characters'),
+});
+
+export const updateSubtaskSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(1, 'Subtask title cannot be empty')
+    .max(100, 'Subtask title cannot exceed 100 characters')
+    .optional(),
+  completed: z.boolean().optional(),
+});
+
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
+export type CreateSubtaskInput = z.infer<typeof createSubtaskSchema>;
+export type UpdateSubtaskInput = z.infer<typeof updateSubtaskSchema>;

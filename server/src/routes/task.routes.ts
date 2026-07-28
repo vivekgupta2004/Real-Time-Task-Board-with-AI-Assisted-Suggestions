@@ -1,8 +1,22 @@
 import { Router } from 'express';
-import { createTask, getTasks, updateTask, completeTask, deleteTask } from '../controllers/task.controller';
+import {
+  createTask,
+  getTasks,
+  updateTask,
+  completeTask,
+  deleteTask,
+  addSubtask,
+  updateSubtask,
+  deleteSubtask,
+} from '../controllers/task.controller';
 import { authenticate } from '../middleware/auth.middleware';
 import { validateRequest } from '../middleware/validate.middleware';
-import { createTaskSchema, updateTaskSchema } from '../validations/task.validation';
+import {
+  createTaskSchema,
+  updateTaskSchema,
+  createSubtaskSchema,
+  updateSubtaskSchema,
+} from '../validations/task.validation';
 
 const router = Router();
 
@@ -12,6 +26,39 @@ router.use(authenticate);
  * @openapi
  * components:
  *   schemas:
+ *     Subtask:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *         title:
+ *           type: string
+ *         completed:
+ *           type: boolean
+ *         completedAt:
+ *           type: string
+ *           format: date-time
+ *           nullable: true
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *     CreateSubtaskInput:
+ *       type: object
+ *       required:
+ *         - title
+ *       properties:
+ *         title:
+ *           type: string
+ *           example: Write Auth Integration Tests
+ *     UpdateSubtaskInput:
+ *       type: object
+ *       properties:
+ *         title:
+ *           type: string
+ *           example: Updated Subtask Title
+ *         completed:
+ *           type: boolean
+ *           example: true
  *     CreateTaskInput:
  *       type: object
  *       required:
@@ -58,7 +105,7 @@ router.use(authenticate);
  *           type: string
  *         status:
  *           type: string
- *           enum: [pending, completed]
+ *           enum: [pending, in_progress, completed]
  *         priority:
  *           type: string
  *           enum: [low, medium, high]
@@ -69,6 +116,10 @@ router.use(authenticate);
  *           type: string
  *           format: date-time
  *           nullable: true
+ *         subtasks:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Subtask'
  *         owner:
  *           type: string
  *         createdAt:
@@ -83,7 +134,7 @@ router.use(authenticate);
  * @openapi
  * /tasks:
  *   get:
- *     summary: Get all tasks for the authenticated user
+ *     summary: Get all tasks for authenticated user
  *     tags:
  *       - Tasks
  *     security:
@@ -93,19 +144,15 @@ router.use(authenticate);
  *         name: status
  *         schema:
  *           type: string
- *           enum: [pending, completed]
- *         description: Filter tasks by status
+ *           enum: [pending, in_progress, completed]
  *       - in: query
  *         name: priority
  *         schema:
  *           type: string
  *           enum: [low, medium, high]
- *         description: Filter tasks by priority
  *     responses:
  *       200:
  *         description: Tasks fetched successfully
- *       401:
- *         description: Unauthorized
  */
 router.get('/', getTasks);
 
@@ -127,10 +174,6 @@ router.get('/', getTasks);
  *     responses:
  *       201:
  *         description: Task created successfully
- *       400:
- *         description: Validation failed
- *       401:
- *         description: Unauthorized
  */
 router.post('/', validateRequest(createTaskSchema), createTask);
 
@@ -138,7 +181,7 @@ router.post('/', validateRequest(createTaskSchema), createTask);
  * @openapi
  * /tasks/{id}:
  *   put:
- *     summary: Update an existing task by ID
+ *     summary: Update a task
  *     tags:
  *       - Tasks
  *     security:
@@ -149,7 +192,6 @@ router.post('/', validateRequest(createTaskSchema), createTask);
  *         required: true
  *         schema:
  *           type: string
- *         description: Task ID
  *     requestBody:
  *       required: true
  *       content:
@@ -159,14 +201,6 @@ router.post('/', validateRequest(createTaskSchema), createTask);
  *     responses:
  *       200:
  *         description: Task updated successfully
- *       400:
- *         description: Validation failed
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden (Not task owner)
- *       404:
- *         description: Task not found
  */
 router.put('/:id', validateRequest(updateTaskSchema), updateTask);
 
@@ -185,18 +219,9 @@ router.put('/:id', validateRequest(updateTaskSchema), updateTask);
  *         required: true
  *         schema:
  *           type: string
- *         description: Task ID
  *     responses:
  *       200:
  *         description: Task completed successfully
- *       400:
- *         description: Task is already completed
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden (Not task owner)
- *       404:
- *         description: Task not found
  */
 router.patch('/:id/complete', completeTask);
 
@@ -204,7 +229,7 @@ router.patch('/:id/complete', completeTask);
  * @openapi
  * /tasks/{id}:
  *   delete:
- *     summary: Delete a task by ID
+ *     summary: Delete a task
  *     tags:
  *       - Tasks
  *     security:
@@ -215,17 +240,95 @@ router.patch('/:id/complete', completeTask);
  *         required: true
  *         schema:
  *           type: string
- *         description: Task ID
  *     responses:
  *       200:
  *         description: Task deleted successfully
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden (Not task owner)
- *       404:
- *         description: Task not found
  */
 router.delete('/:id', deleteTask);
+
+/**
+ * @openapi
+ * /tasks/{taskId}/subtasks:
+ *   post:
+ *     summary: Add a subtask to a task
+ *     tags:
+ *       - Subtasks
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateSubtaskInput'
+ *     responses:
+ *       201:
+ *         description: Subtask added successfully
+ */
+router.post('/:taskId/subtasks', validateRequest(createSubtaskSchema), addSubtask);
+
+/**
+ * @openapi
+ * /tasks/{taskId}/subtasks/{subtaskId}:
+ *   patch:
+ *     summary: Update title or completion status of a subtask
+ *     tags:
+ *       - Subtasks
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: subtaskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateSubtaskInput'
+ *     responses:
+ *       200:
+ *         description: Subtask updated successfully
+ */
+router.patch('/:taskId/subtasks/:subtaskId', validateRequest(updateSubtaskSchema), updateSubtask);
+
+/**
+ * @openapi
+ * /tasks/{taskId}/subtasks/{subtaskId}:
+ *   delete:
+ *     summary: Delete a subtask
+ *     tags:
+ *       - Subtasks
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: subtaskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Subtask deleted successfully
+ */
+router.delete('/:taskId/subtasks/:subtaskId', deleteSubtask);
 
 export default router;
