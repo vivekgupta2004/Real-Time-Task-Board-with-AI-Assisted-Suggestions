@@ -64,10 +64,8 @@ export const TaskForm = () => {
     try {
       if (modalMode === 'create') {
         await createTask(data);
-        toast.success('Task created successfully!');
       } else if (modalMode === 'edit' && selectedTask) {
         await updateTask(selectedTask._id, data);
-        toast.success('Task updated successfully!');
       }
     } catch (error: any) {
       const errorMsg = error.message || error.errors?.[0]?.message || 'Operation failed';

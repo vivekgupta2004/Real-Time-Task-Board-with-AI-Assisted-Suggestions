@@ -24,6 +24,11 @@ interface TaskState {
   completeTask: (id: string) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
 
+  // Real-time Socket Event Handlers
+  onTaskCreated: (task: Task) => void;
+  onTaskUpdated: (task: Task) => void;
+  onTaskDeleted: (taskId: string) => void;
+
   setSearchQuery: (query: string) => void;
   setStatusFilter: (filter: 'all' | TaskStatus) => void;
 
@@ -63,7 +68,12 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     set({ isSubmitting: true });
     try {
       const newTask = await createTaskApi(data);
-      set({ tasks: [newTask, ...get().tasks], isSubmitting: false, isModalOpen: false });
+      const existing = get().tasks.some((t) => t._id === newTask._id);
+      if (!existing) {
+        set({ tasks: [newTask, ...get().tasks], isSubmitting: false, isModalOpen: false });
+      } else {
+        set({ isSubmitting: false, isModalOpen: false });
+      }
     } catch (err: any) {
       set({ isSubmitting: false });
       throw err;
@@ -114,6 +124,26 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       set({ isSubmitting: false });
       throw err;
     }
+  },
+
+  // Realtime handlers
+  onTaskCreated: (task) => {
+    const exists = get().tasks.some((t) => t._id === task._id);
+    if (!exists) {
+      set({ tasks: [task, ...get().tasks] });
+    }
+  },
+
+  onTaskUpdated: (task) => {
+    set({
+      tasks: get().tasks.map((t) => (t._id === task._id ? task : t)),
+    });
+  },
+
+  onTaskDeleted: (taskId) => {
+    set({
+      tasks: get().tasks.filter((t) => t._id !== taskId),
+    });
   },
 
   setSearchQuery: (query) => set({ searchQuery: query }),

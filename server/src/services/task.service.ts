@@ -1,5 +1,5 @@
 import Task, { ITask } from '../models/task.model';
-import { emitToUser, getIO } from '../socket/socket';
+import { emitToUser } from '../socket/socket';
 import { createNotification } from './notification.service';
 import { AppError } from '../utils/appError';
 import { CreateTaskInput, UpdateTaskInput } from '../validations/task.validation';
@@ -27,8 +27,6 @@ const checkAndNotifyDueSoon = async (userId: string, taskTitle: string, dueDate:
 const notifyTaskEvent = (userId: string, eventName: string, payload: any): void => {
   try {
     emitToUser(userId, eventName, payload);
-    const io = getIO();
-    io.emit(eventName, payload);
   } catch (error) {
     console.error(`Failed to emit socket event ${eventName}:`, error);
   }

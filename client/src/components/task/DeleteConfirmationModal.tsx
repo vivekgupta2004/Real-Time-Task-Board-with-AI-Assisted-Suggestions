@@ -13,7 +13,6 @@ export const DeleteConfirmationModal = () => {
   const handleDelete = async () => {
     try {
       await deleteTask(taskToDelete._id);
-      toast.success('Task deleted successfully!');
     } catch (error: any) {
       const errorMsg = error.message || 'Failed to delete task';
       toast.error(errorMsg);

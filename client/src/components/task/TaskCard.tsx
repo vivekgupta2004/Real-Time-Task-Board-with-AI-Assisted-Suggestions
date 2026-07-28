@@ -32,7 +32,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     setIsCompleting(true);
     try {
       await completeTask(task._id);
-      toast.success(`Task "${task.title}" completed!`);
     } catch (error: any) {
       const errorMsg = error.message || 'Failed to complete task';
       toast.error(errorMsg);
