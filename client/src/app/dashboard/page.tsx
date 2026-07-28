@@ -1,11 +1,15 @@
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import SummaryCards from '@/components/dashboard/SummaryCards';
+import TaskList from '@/components/task/TaskList';
 
 export default function DashboardPage() {
   return (
     <ProtectedRoute>
-      <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-        <p className="text-gray-500 mt-2">Welcome to your protected task board dashboard.</p>
+      <div className="max-w-7xl mx-auto py-4">
+        <DashboardHeader />
+        <SummaryCards />
+        <TaskList />
       </div>
     </ProtectedRoute>
   );
