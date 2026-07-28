@@ -1,7 +1,22 @@
 import Task, { ITask } from '../models/task.model';
 import { emitToUser, getIO } from '../socket/socket';
+import { createNotification } from './notification.service';
 import { AppError } from '../utils/appError';
 import { CreateTaskInput, UpdateTaskInput } from '../validations/task.validation';
+
+const checkAndNotifyDueSoon = async (userId: string, taskTitle: string, dueDate: Date): Promise<void> => {
+  const now = new Date();
+  const twentyFourHoursLater = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+  if (dueDate > now && dueDate <= twentyFourHoursLater) {
+    await createNotification({
+      userId,
+      title: 'Task Due Soon',
+      message: `Your task '${taskTitle}' is due within the next 24 hours.`,
+      type: 'due_soon',
+    });
+  }
+};
 
 const notifyTaskEvent = (userId: string, eventName: string, payload: any): void => {
   try {
@@ -14,9 +29,10 @@ const notifyTaskEvent = (userId: string, eventName: string, payload: any): void 
 };
 
 export const createTask = async (userId: string, data: CreateTaskInput): Promise<ITask> => {
+  const dueDate = new Date(data.dueDate);
   const task = await Task.create({
     ...data,
-    dueDate: new Date(data.dueDate),
+    dueDate,
     owner: userId,
   });
 
@@ -24,6 +40,8 @@ export const createTask = async (userId: string, data: CreateTaskInput): Promise
     event: 'task:created',
     data: task,
   });
+
+  await checkAndNotifyDueSoon(userId, task.title, dueDate);
 
   return task;
 };
@@ -61,6 +79,19 @@ export const updateTask = async (
     event: 'task:updated',
     data: updatedTask,
   });
+
+  if (data.status === 'completed' && task.status !== 'completed') {
+    await createNotification({
+      userId,
+      title: 'Task Completed',
+      message: `Your task '${updatedTask!.title}' has been completed.`,
+      type: 'completed',
+    });
+  }
+
+  if (updatedTask && updatedTask.dueDate) {
+    await checkAndNotifyDueSoon(userId, updatedTask.title, updatedTask.dueDate);
+  }
 
   return updatedTask!;
 };
