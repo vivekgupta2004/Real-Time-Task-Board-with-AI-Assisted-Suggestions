@@ -8,7 +8,13 @@ import Navbar from '@/components/layout/Navbar';
 export const metadata: Metadata = {
   title: 'Real-Time Task Board',
   description: 'Production-ready Real-Time Task Board Application',
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
+  },
 };
+
 
 export default function RootLayout({
   children,

@@ -12,9 +12,31 @@ import aiRoutes from './routes/ai.routes';
 
 const app: Application = express();
 
+const allowedOrigins = [
+  'https://real-time-task-board-with-ai-assist.vercel.app',
+  'https://real-time-task-board-with-ai-assist.vercel.app/',
+  'http://localhost:3000',
+  process.env.CLIENT_URL,
+  process.env.CORS_ORIGIN,
+].filter(Boolean) as string[];
+
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+        callback(null, true);
+      } else {
+        callback(null, true);
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
 app.use(morgan('dev'));
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

@@ -11,13 +11,22 @@ export interface AuthenticatedSocket extends Socket {
 let io: Server | null = null;
 
 export const initializeSocket = (server: HttpServer): Server => {
+  const allowedOrigins = [
+    'https://real-time-task-board-with-ai-assist.vercel.app',
+    'https://real-time-task-board-with-ai-assist.vercel.app/',
+    'http://localhost:3000',
+    process.env.CLIENT_URL,
+    process.env.CORS_ORIGIN,
+  ].filter(Boolean) as string[];
+
   io = new Server(server, {
     cors: {
-      origin: process.env.CORS_ORIGIN || '*',
-      methods: ['GET', 'POST'],
+      origin: allowedOrigins.length > 0 ? allowedOrigins : '*',
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       credentials: true,
     },
   });
+
 
   // Socket.IO JWT Authentication Middleware
   io.use((socket: AuthenticatedSocket, next) => {
