@@ -164,8 +164,10 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="border-t border-slate-200 py-6 text-center text-xs text-slate-500">
-        <p>© {new Date().getFullYear()} Real-Time Task Board with AI-Assisted Suggestions. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} TaskBoardAiX21cc. All rights reserved.</p>
       </footer>
+
+
     </div>
   );
 }

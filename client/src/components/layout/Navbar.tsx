@@ -40,7 +40,9 @@ export const Navbar = () => {
             <div className="p-2 bg-indigo-600 rounded-xl text-white shadow-md shadow-indigo-600/20 group-hover:scale-105 transition-transform flex items-center justify-center">
               <LayoutDashboard className="h-5 w-5" />
             </div>
-            <span className="font-extrabold text-lg text-slate-900 tracking-tight">TaskBoard AI</span>
+            <span className="font-extrabold text-lg text-slate-900 tracking-tight">TaskBoardAiX21cc</span>
+
+
           </Link>
 
           {/* Desktop Navigation Links */}

@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 
-import { taskFormSchema, TaskFormData } from '@/utils/task.validation';
+import { taskFormSchema, TaskFormData, validateAiTitle, validateAiDescription } from '@/utils/task.validation';
 import { useTaskStore } from '@/store/useTaskStore';
 import { generateAISubtasksApi } from '@/services/ai.service';
 import { Subtask } from '@/types/task';
@@ -31,6 +31,7 @@ export const TaskForm = () => {
   const { modalMode, selectedTask, createTask, updateTask, isSubmitting, closeModal } = useTaskStore();
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [lastAiInput, setLastAiInput] = useState<{ title: string; description: string } | null>(null);
 
   const isReadOnly = modalMode === 'edit' && selectedTask?.status === 'completed';
   const minDateTime = formatForDateTimeLocal(new Date().toISOString());
@@ -71,6 +72,7 @@ export const TaskForm = () => {
         dueDate: formatForDateTimeLocal(selectedTask.dueDate),
       });
       setSubtasks(selectedTask.subtasks || []);
+      setLastAiInput(null);
     } else {
       reset({
         title: '',
@@ -79,21 +81,39 @@ export const TaskForm = () => {
         dueDate: '',
       });
       setSubtasks([]);
+      setLastAiInput(null);
     }
   }, [modalMode, selectedTask, reset]);
 
   const handleSuggestSubtasks = async () => {
-    if (isAiDisabled || isAiLoading) return;
+    if (isReadOnly || isAiLoading) return;
+
+    const isTitleValid = validateAiTitle(watchTitle);
+    const isDescValid = validateAiDescription(watchDescription);
+
+    if (!isTitleValid || !isDescValid) {
+      toast.error('Please provide a proper Title and Description to generate AI subtasks.');
+      return;
+    }
+
+    if (subtasks.length > 0) {
+      toast('Subtasks have already been generated for this task.', { icon: 'ℹ️' });
+      return;
+    }
+
+    const currentTitle = watchTitle.trim();
+    const currentDesc = watchDescription.trim();
 
     setIsAiLoading(true);
     try {
       const generated = await generateAISubtasksApi({
-        title: watchTitle.trim(),
-        description: watchDescription.trim(),
+        title: currentTitle,
+        description: currentDesc,
       });
 
       if (generated && generated.length > 0) {
         setSubtasks(generated.map((s) => ({ title: s.title, completed: false })));
+        setLastAiInput({ title: currentTitle, description: currentDesc });
         toast.success(`Generated ${generated.length} AI subtask suggestions!`);
       }
     } catch (error: any) {
@@ -134,18 +154,40 @@ export const TaskForm = () => {
       return;
     }
 
-    if (isAiLoading) {
-      toast.error('Generating AI subtasks, please wait...');
+    if (isAiLoading || isSubmitting) {
       return;
     }
 
     try {
       const validSubtasks = subtasks.filter((s) => s.title.trim().length > 0);
 
+      if (modalMode === 'edit' && selectedTask) {
+        const isTitleSame = data.title.trim() === selectedTask.title.trim();
+        const isDescSame = data.description.trim() === selectedTask.description.trim();
+        const isPrioritySame = (data.priority || 'medium') === (selectedTask.priority || 'medium');
+        const isDueDateSame = formatForDateTimeLocal(data.dueDate) === formatForDateTimeLocal(selectedTask.dueDate);
+
+        const existingSubtasks = selectedTask.subtasks || [];
+        const isSubtasksSame =
+          validSubtasks.length === existingSubtasks.length &&
+          validSubtasks.every(
+            (st, idx) =>
+              st.title === existingSubtasks[idx]?.title && !!st.completed === !!existingSubtasks[idx]?.completed
+          );
+
+        if (isTitleSame && isDescSame && isPrioritySame && isDueDateSame && isSubtasksSame) {
+          toast('No changes detected.', { icon: 'ℹ️' });
+          closeModal();
+          return;
+        }
+      }
+
       if (modalMode === 'create') {
         await createTask({ ...data, subtasks: validSubtasks });
+        toast.success('Task created successfully!');
       } else if (modalMode === 'edit' && selectedTask) {
         await updateTask(selectedTask._id, { ...data, subtasks: validSubtasks });
+        toast.success('Task updated successfully!');
       }
     } catch (error: any) {
       const errorMsg = error.message || error.errors?.[0]?.message || 'Operation failed';
@@ -154,6 +196,7 @@ export const TaskForm = () => {
   };
 
   return (
+
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {isReadOnly && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs font-medium text-amber-800 flex items-center gap-2">
