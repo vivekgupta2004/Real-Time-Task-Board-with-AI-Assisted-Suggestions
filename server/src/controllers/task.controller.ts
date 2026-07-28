@@ -16,20 +16,27 @@ export const createTask = async (req: Request, res: Response, next: NextFunction
 
 export const getTasks = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { status, priority } = req.query;
-    const tasks = await taskService.getUserTasks(req.user!._id.toString(), {
+    const { page, limit, search, status, priority, sortBy, order } = req.query;
+    const result = await taskService.getUserTasks(req.user!._id.toString(), {
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+      search: typeof search === 'string' ? search : undefined,
       status: typeof status === 'string' ? status : undefined,
       priority: typeof priority === 'string' ? priority : undefined,
+      sortBy: typeof sortBy === 'string' ? sortBy : undefined,
+      order: typeof order === 'string' ? order : undefined,
     });
     res.status(200).json({
       success: true,
       message: 'Tasks fetched successfully',
-      data: tasks,
+      data: result.tasks,
+      pagination: result.pagination,
     });
   } catch (error) {
     next(error);
   }
 };
+
 
 export const updateTask = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {

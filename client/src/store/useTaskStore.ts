@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Task, TaskStatus } from '@/types/task';
+import { Task, TaskStatus, PaginationMeta } from '@/types/task';
 import {
   fetchTasksApi,
   createTaskApi,
@@ -12,13 +12,22 @@ import {
 } from '@/services/task.service';
 import { TaskFormData } from '@/utils/task.validation';
 
+
 interface TaskState {
   tasks: Task[];
   isLoading: boolean;
   isSubmitting: boolean;
   error: string | null;
+
+  // Pagination, Filter, Search, Sort states
+  page: number;
+  limit: number;
   searchQuery: string;
   statusFilter: 'all' | TaskStatus;
+  priorityFilter: 'all' | 'low' | 'medium' | 'high';
+  sortBy: string;
+  order: 'asc' | 'desc';
+  pagination: PaginationMeta;
 
   // Modal states
   isModalOpen: boolean;
@@ -43,8 +52,11 @@ interface TaskState {
   onTaskUpdated: (task: Task) => void;
   onTaskDeleted: (taskId: string) => void;
 
+  setPage: (page: number) => Promise<void>;
   setSearchQuery: (query: string) => void;
   setStatusFilter: (filter: 'all' | TaskStatus) => void;
+  setPriorityFilter: (filter: 'all' | 'low' | 'medium' | 'high') => void;
+  setSort: (sortBy: string, order: 'asc' | 'desc') => void;
 
   openCreateModal: () => void;
   openEditModal: (task: Task) => void;
@@ -58,8 +70,23 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   isLoading: false,
   isSubmitting: false,
   error: null,
+
+  page: 1,
+  limit: 9,
   searchQuery: '',
   statusFilter: 'all',
+  priorityFilter: 'all',
+  sortBy: 'createdAt',
+  order: 'desc',
+  pagination: {
+    page: 1,
+    limit: 9,
+    totalItems: 0,
+    totalPages: 1,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  },
+
 
   isModalOpen: false,
   modalMode: 'create',
@@ -70,8 +97,17 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   fetchTasks: async () => {
     set({ isLoading: true, error: null });
     try {
-      const tasks = await fetchTasksApi();
-      set({ tasks, isLoading: false });
+      const { page, limit, searchQuery, statusFilter, priorityFilter, sortBy, order } = get();
+      const result = await fetchTasksApi({
+        page,
+        limit,
+        search: searchQuery,
+        status: statusFilter,
+        priority: priorityFilter,
+        sortBy,
+        order,
+      });
+      set({ tasks: result.tasks, pagination: result.pagination, isLoading: false });
     } catch (err: any) {
       const message = err.message || err.errors?.[0]?.message || 'Failed to fetch tasks';
       set({ error: message, isLoading: false });
@@ -81,13 +117,9 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   createTask: async (data) => {
     set({ isSubmitting: true });
     try {
-      const newTask = await createTaskApi(data);
-      const existing = get().tasks.some((t) => t._id === newTask._id);
-      if (!existing) {
-        set({ tasks: [newTask, ...get().tasks], isSubmitting: false, isModalOpen: false });
-      } else {
-        set({ isSubmitting: false, isModalOpen: false });
-      }
+      await createTaskApi(data);
+      set({ isSubmitting: false, isModalOpen: false });
+      await get().fetchTasks();
     } catch (err: any) {
       set({ isSubmitting: false });
       throw err;
@@ -128,12 +160,8 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     set({ isSubmitting: true });
     try {
       await deleteTaskApi(id);
-      set({
-        tasks: get().tasks.filter((t) => t._id !== id),
-        isSubmitting: false,
-        isDeleteModalOpen: false,
-        taskToDelete: null,
-      });
+      set({ isSubmitting: false, isDeleteModalOpen: false, taskToDelete: null });
+      await get().fetchTasks();
     } catch (err: any) {
       set({ isSubmitting: false });
       throw err;
@@ -169,10 +197,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
 
   // Realtime handlers
   onTaskCreated: (task) => {
-    const exists = get().tasks.some((t) => t._id === task._id);
-    if (!exists) {
-      set({ tasks: [task, ...get().tasks] });
-    }
+    get().fetchTasks();
   },
 
   onTaskUpdated: (task) => {
@@ -182,13 +207,33 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   },
 
   onTaskDeleted: (taskId) => {
-    set({
-      tasks: get().tasks.filter((t) => t._id !== taskId),
-    });
+    get().fetchTasks();
   },
 
-  setSearchQuery: (query) => set({ searchQuery: query }),
-  setStatusFilter: (filter) => set({ statusFilter: filter }),
+  setPage: async (page) => {
+    set({ page });
+    await get().fetchTasks();
+  },
+
+  setSearchQuery: (query) => {
+    set({ searchQuery: query, page: 1 });
+    get().fetchTasks();
+  },
+
+  setStatusFilter: (filter) => {
+    set({ statusFilter: filter, page: 1 });
+    get().fetchTasks();
+  },
+
+  setPriorityFilter: (filter) => {
+    set({ priorityFilter: filter, page: 1 });
+    get().fetchTasks();
+  },
+
+  setSort: (sortBy, order) => {
+    set({ sortBy, order, page: 1 });
+    get().fetchTasks();
+  },
 
   openCreateModal: () => set({ isModalOpen: true, modalMode: 'create', selectedTask: null }),
   openEditModal: (task) => set({ isModalOpen: true, modalMode: 'edit', selectedTask: task }),
@@ -196,3 +241,4 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   openDeleteModal: (task) => set({ isDeleteModalOpen: true, taskToDelete: task }),
   closeDeleteModal: () => set({ isDeleteModalOpen: false, taskToDelete: null }),
 }));
+

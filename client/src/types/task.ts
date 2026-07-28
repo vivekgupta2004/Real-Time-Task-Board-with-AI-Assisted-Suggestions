@@ -21,8 +21,29 @@ export interface Task {
   updatedAt: string;
 }
 
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+export interface GetTasksQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  priority?: string;
+  sortBy?: string;
+  order?: 'asc' | 'desc';
+}
+
 export interface GetTasksResponse {
   success: boolean;
   message?: string;
   data: Task[];
+  pagination?: PaginationMeta;
 }
+

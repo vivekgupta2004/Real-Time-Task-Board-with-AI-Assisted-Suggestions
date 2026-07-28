@@ -1,14 +1,10 @@
+import { Types } from 'mongoose';
 import Task, { ITask } from '../models/task.model';
 import { emitToUser } from '../socket/socket';
 import { createNotification } from './notification.service';
 import { AppError } from '../utils/appError';
 import { CreateTaskInput, UpdateTaskInput, CreateSubtaskInput, UpdateSubtaskInput } from '../validations/task.validation';
 
-const priorityWeight: Record<string, number> = {
-  high: 1,
-  medium: 2,
-  low: 3,
-};
 
 const checkAndNotifyDueSoon = async (userId: string, taskTitle: string, dueDate: Date): Promise<void> => {
   const now = new Date();
@@ -106,49 +102,111 @@ export const createTask = async (userId: string, data: CreateTaskInput): Promise
   return task;
 };
 
+export interface GetUserTasksQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  priority?: string;
+  sortBy?: string;
+  order?: string;
+}
+
+export interface GetUserTasksResult {
+  tasks: ITask[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalItems: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
+
 export const getUserTasks = async (
   userId: string,
-  filters?: { status?: string; priority?: string }
-): Promise<ITask[]> => {
-  const query: Record<string, any> = { owner: userId };
-  if (filters?.status) {
-    query.status = filters.status;
+  queryParams: GetUserTasksQuery = {}
+): Promise<GetUserTasksResult> => {
+  const page = Math.max(1, Number(queryParams.page) || 1);
+  const limit = Math.max(1, Math.min(100, Number(queryParams.limit) || 9));
+  const skip = (page - 1) * limit;
+
+
+  const query: Record<string, any> = { owner: new Types.ObjectId(userId) };
+
+  if (queryParams.status && queryParams.status !== 'all') {
+    const statusVal = queryParams.status === 'in-progress' ? 'in_progress' : queryParams.status;
+    if (['pending', 'in_progress', 'completed'].includes(statusVal)) {
+      query.status = statusVal;
+    }
   }
-  if (filters?.priority) {
-    query.priority = filters.priority;
+
+  if (queryParams.priority && queryParams.priority !== 'all') {
+    if (['low', 'medium', 'high'].includes(queryParams.priority)) {
+      query.priority = queryParams.priority;
+    }
   }
 
-  const tasks = await Task.find(query);
+  if (queryParams.search && queryParams.search.trim().length > 0) {
+    query.title = { $regex: queryParams.search.trim(), $options: 'i' };
+  }
 
-  tasks.sort((a, b) => {
-    // 1. Pending/In_Progress tasks first, Completed tasks at the bottom
-    if (a.status !== b.status) {
-      if (a.status === 'completed') return 1;
-      if (b.status === 'completed') return -1;
-    }
+  const totalItems = await Task.countDocuments(query);
+  const totalPages = Math.ceil(totalItems / limit) || 1;
 
-    // 2. Sort by Due Date & Due Time ascending (nearest deadline first)
-    const dA = new Date(a.dueDate).getTime();
-    const dB = new Date(b.dueDate).getTime();
-    if (dA !== dB) {
-      return dA - dB;
-    }
+  const sortOrder: 1 | -1 = queryParams.order === 'asc' ? 1 : -1;
+  const sortBy = queryParams.sortBy || 'createdAt';
 
-    // 3. Priority: High -> Medium -> Low
-    const pA = priorityWeight[a.priority || 'medium'] || 2;
-    const pB = priorityWeight[b.priority || 'medium'] || 2;
-    if (pA !== pB) {
-      return pA - pB;
-    }
+  let tasks: ITask[];
 
-    // 4. Created At descending (newest first)
-    const crA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-    const crB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-    return crB - crA;
-  });
+  if (sortBy === 'priority') {
+    tasks = await Task.aggregate([
+      { $match: query },
+      {
+        $addFields: {
+          priorityWeight: {
+            $switch: {
+              branches: [
+                { case: { $eq: ['$priority', 'high'] }, then: 1 },
+                { case: { $eq: ['$priority', 'medium'] }, then: 2 },
+                { case: { $eq: ['$priority', 'low'] }, then: 3 },
+              ],
+              default: 2,
+            },
+          },
+        },
+      },
+      { $sort: { priorityWeight: sortOrder, createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+    ]);
+  } else {
+    const validSortFields: Record<string, string> = {
+      createdAt: 'createdAt',
+      dueDate: 'dueDate',
+      title: 'title',
+    };
+    const field = validSortFields[sortBy] || 'createdAt';
+    tasks = await Task.find(query)
+      .sort({ [field]: sortOrder })
+      .skip(skip)
+      .limit(limit);
+  }
 
-  return tasks;
+  return {
+    tasks,
+    pagination: {
+      page,
+      limit,
+      totalItems,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+    },
+  };
 };
+
 
 export const updateTask = async (
   userId: string,
