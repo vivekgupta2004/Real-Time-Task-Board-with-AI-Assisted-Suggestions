@@ -49,34 +49,44 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({ notification
   return (
     <div
       onClick={handleClick}
-      className={`p-3.5 border-b border-gray-100 cursor-pointer transition-colors duration-150 flex items-start gap-3 ${
-        notification.isRead ? 'bg-white hover:bg-gray-50 opacity-75' : 'bg-indigo-50/50 hover:bg-indigo-50 font-medium'
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && handleClick()}
+      className={`p-3.5 sm:p-4 border-b border-slate-100 cursor-pointer transition-colors duration-150 flex items-start gap-3 w-full max-w-full overflow-hidden ${
+        notification.isRead
+          ? 'bg-white hover:bg-slate-50 opacity-80'
+          : 'bg-indigo-50/60 hover:bg-indigo-50 font-medium'
       }`}
     >
-      <div className="mt-0.5 p-1.5 rounded-full bg-white border border-gray-200 shadow-xs">
+      <div className="mt-0.5 p-2 rounded-xl bg-white border border-slate-200/80 shadow-xs flex-shrink-0">
         {getIcon(notification.type)}
       </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between gap-2 mb-1">
-          <h4 className={`text-xs font-semibold truncate ${notification.isRead ? 'text-gray-700' : 'text-gray-900 font-bold'}`}>
+      <div className="flex-1 min-w-0 overflow-hidden">
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <h4
+            className={`text-xs sm:text-sm font-semibold break-words leading-snug ${
+              notification.isRead ? 'text-slate-700' : 'text-slate-900 font-bold'
+            }`}
+          >
             {notification.title}
           </h4>
-          <span className="text-[10px] text-gray-400 whitespace-nowrap">
+          <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap flex-shrink-0">
             {getTimeAgo(notification.createdAt)}
           </span>
         </div>
 
-        <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
+        <p className="text-xs text-slate-600 break-words leading-relaxed">
           {notification.message}
         </p>
       </div>
 
       {!notification.isRead && (
-        <span className="w-2 h-2 rounded-full bg-red-500 mt-1.5 flex-shrink-0 animate-ping" />
+        <span className="w-2 h-2 rounded-full bg-indigo-600 mt-1.5 flex-shrink-0" />
       )}
     </div>
   );
+
 };
 
 export default NotificationCard;

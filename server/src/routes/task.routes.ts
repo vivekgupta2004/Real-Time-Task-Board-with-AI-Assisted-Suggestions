@@ -134,27 +134,61 @@ router.use(authenticate);
  * @openapi
  * /tasks:
  *   get:
- *     summary: Get all tasks for authenticated user
+ *     summary: Get all tasks for authenticated user with pagination, search, filter, and sort
  *     tags:
  *       - Tasks
  *     security:
  *       - bearerAuth: []
  *     parameters:
  *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 9
+ *         description: Number of tasks per page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Case-insensitive title search term
+ *       - in: query
  *         name: status
  *         schema:
  *           type: string
- *           enum: [pending, in_progress, completed]
+ *           enum: [all, pending, in_progress, completed]
+ *         description: Filter tasks by status
  *       - in: query
  *         name: priority
  *         schema:
  *           type: string
- *           enum: [low, medium, high]
+ *           enum: [all, low, medium, high]
+ *         description: Filter tasks by priority
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [createdAt, dueDate, priority, title]
+ *           default: createdAt
+ *         description: Field to sort tasks by
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Sort direction
  *     responses:
  *       200:
- *         description: Tasks fetched successfully
+ *         description: Tasks fetched successfully with pagination metadata
  */
 router.get('/', getTasks);
+
 
 /**
  * @openapi

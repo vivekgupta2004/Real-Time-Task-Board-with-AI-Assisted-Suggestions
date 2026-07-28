@@ -18,11 +18,12 @@ export const NotificationBell = () => {
   }, [isAuthenticated, fetchNotifications]);
 
   return (
-    <div className="relative">
+    <div className="relative inline-flex items-center">
       <button
         onClick={toggleOpen}
-        className="relative p-2 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-gray-100 transition"
+        className="relative p-2.5 sm:p-2 rounded-xl text-slate-600 hover:text-indigo-600 hover:bg-slate-100 transition min-w-[40px] min-h-[40px] flex items-center justify-center focus:outline-none"
         title="Notifications"
+        aria-label="Toggle Notifications"
       >
         <Bell className="w-5 h-5" />
         <NotificationBadge count={unreadCount} />
@@ -30,6 +31,7 @@ export const NotificationBell = () => {
 
       <NotificationDropdown />
     </div>
+
   );
 };
 

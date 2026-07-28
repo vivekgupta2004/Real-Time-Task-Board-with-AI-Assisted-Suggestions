@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-const emailRegex =
-  /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+const allowedEmailRegex =
+  /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@(gmail\.com|outlook\.com|yahoo\.com|hotmail\.com|icloud\.com)$/i;
 
 export const signupSchema = z.object({
   name: z
@@ -13,7 +13,10 @@ export const signupSchema = z.object({
     .string({ required_error: 'Email is required' })
     .trim()
     .email('Invalid email address')
-    .regex(emailRegex, 'Please provide a valid RFC-compliant email address (e.g. user@example.com)'),
+    .regex(
+      allowedEmailRegex,
+      'Only @gmail.com, @outlook.com, @yahoo.com, @hotmail.com, and @icloud.com email addresses are allowed'
+    ),
   password: z
     .string({ required_error: 'Password is required' })
     .min(8, 'Password must be at least 8 characters')
@@ -28,7 +31,10 @@ export const loginSchema = z.object({
     .string({ required_error: 'Email is required' })
     .trim()
     .email('Invalid email address')
-    .regex(emailRegex, 'Please provide a valid email address'),
+    .regex(
+      allowedEmailRegex,
+      'Only @gmail.com, @outlook.com, @yahoo.com, @hotmail.com, and @icloud.com email addresses are allowed'
+    ),
   password: z
     .string({ required_error: 'Password is required' })
     .min(1, 'Password is required'),
@@ -43,5 +49,6 @@ export const refreshTokenSchema = z.object({
 export type SignupInput = z.infer<typeof signupSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
+
 
 
