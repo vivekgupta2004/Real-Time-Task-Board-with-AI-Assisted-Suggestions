@@ -70,7 +70,16 @@ export const createTask = async (userId: string, data: CreateTaskInput): Promise
     throw new AppError('Due date must be in the future', 400);
   }
 
-  const task = await Task.create({
+  const initialSubtasks =
+    data.subtasks && Array.isArray(data.subtasks)
+      ? data.subtasks.map((s) => ({
+          title: s.title,
+          completed: s.completed || false,
+          completedAt: s.completed ? new Date() : null,
+        }))
+      : [];
+
+  const task = new Task({
     title: data.title,
     description: data.description,
     priority: data.priority || 'medium',
@@ -78,8 +87,14 @@ export const createTask = async (userId: string, data: CreateTaskInput): Promise
     status: 'pending',
     completedAt: null,
     owner: userId,
-    subtasks: [],
+    subtasks: initialSubtasks,
   });
+
+  if (initialSubtasks.length > 0) {
+    await recalculateSubtaskStatus(userId, task);
+  }
+
+  await task.save();
 
   notifyTaskEvent(userId, 'task:created', {
     event: 'task:created',
@@ -149,33 +164,39 @@ export const updateTask = async (
     throw new AppError('You do not have permission to update this task', 403);
   }
 
-  const updateFields: Record<string, any> = {};
-  if (data.title !== undefined) updateFields.title = data.title;
-  if (data.description !== undefined) updateFields.description = data.description;
-  if (data.priority !== undefined) updateFields.priority = data.priority;
+  if (data.title !== undefined) task.title = data.title;
+  if (data.description !== undefined) task.description = data.description;
+  if (data.priority !== undefined) task.priority = data.priority;
   if (data.dueDate !== undefined) {
     const newDueDate = new Date(data.dueDate);
     if (isNaN(newDueDate.getTime()) || newDueDate <= new Date()) {
       throw new AppError('Due date must be in the future', 400);
     }
-    updateFields.dueDate = newDueDate;
+    task.dueDate = newDueDate;
   }
 
-  const updatedTask = await Task.findByIdAndUpdate(taskId, updateFields, {
-    new: true,
-    runValidators: true,
-  });
+  if (data.subtasks !== undefined && Array.isArray(data.subtasks)) {
+    task.subtasks = data.subtasks.map((s: any) => ({
+      ...(s._id ? { _id: s._id } : {}),
+      title: s.title,
+      completed: s.completed || false,
+      completedAt: s.completed ? new Date() : null,
+    })) as any;
+    await recalculateSubtaskStatus(userId, task);
+  }
+
+  await task.save();
 
   notifyTaskEvent(userId, 'task:updated', {
     event: 'task:updated',
-    data: updatedTask,
+    data: task,
   });
 
-  if (updatedTask && updatedTask.dueDate) {
-    await checkAndNotifyDueSoon(userId, updatedTask.title, updatedTask.dueDate);
+  if (task.dueDate) {
+    await checkAndNotifyDueSoon(userId, task.title, task.dueDate);
   }
 
-  return updatedTask!;
+  return task;
 };
 
 export const completeTask = async (userId: string, taskId: string): Promise<ITask> => {

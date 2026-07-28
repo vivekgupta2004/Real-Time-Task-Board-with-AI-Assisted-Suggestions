@@ -1,6 +1,15 @@
 import { create } from 'zustand';
 import { Task, TaskStatus } from '@/types/task';
-import { fetchTasksApi, createTaskApi, updateTaskApi, completeTaskApi, deleteTaskApi } from '@/services/task.service';
+import {
+  fetchTasksApi,
+  createTaskApi,
+  updateTaskApi,
+  completeTaskApi,
+  deleteTaskApi,
+  addSubtaskApi,
+  updateSubtaskApi,
+  deleteSubtaskApi,
+} from '@/services/task.service';
 import { TaskFormData } from '@/utils/task.validation';
 
 interface TaskState {
@@ -19,10 +28,15 @@ interface TaskState {
   taskToDelete: Task | null;
 
   fetchTasks: () => Promise<void>;
-  createTask: (data: TaskFormData) => Promise<void>;
-  updateTask: (id: string, data: Partial<TaskFormData>) => Promise<void>;
+  createTask: (data: TaskFormData & { subtasks?: any[] }) => Promise<void>;
+  updateTask: (id: string, data: Partial<TaskFormData> & { subtasks?: any[] }) => Promise<void>;
   completeTask: (id: string) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
+
+  // Subtask Actions
+  addSubtask: (taskId: string, title: string) => Promise<void>;
+  toggleSubtask: (taskId: string, subtaskId: string, completed: boolean) => Promise<void>;
+  deleteSubtask: (taskId: string, subtaskId: string) => Promise<void>;
 
   // Real-time Socket Event Handlers
   onTaskCreated: (task: Task) => void;
@@ -122,6 +136,33 @@ export const useTaskStore = create<TaskState>((set, get) => ({
       });
     } catch (err: any) {
       set({ isSubmitting: false });
+      throw err;
+    }
+  },
+
+  addSubtask: async (taskId, title) => {
+    try {
+      const updatedTask = await addSubtaskApi(taskId, title);
+      set({ tasks: get().tasks.map((t) => (t._id === taskId ? updatedTask : t)) });
+    } catch (err: any) {
+      throw err;
+    }
+  },
+
+  toggleSubtask: async (taskId, subtaskId, completed) => {
+    try {
+      const updatedTask = await updateSubtaskApi(taskId, subtaskId, { completed });
+      set({ tasks: get().tasks.map((t) => (t._id === taskId ? updatedTask : t)) });
+    } catch (err: any) {
+      throw err;
+    }
+  },
+
+  deleteSubtask: async (taskId, subtaskId) => {
+    try {
+      const updatedTask = await deleteSubtaskApi(taskId, subtaskId);
+      set({ tasks: get().tasks.map((t) => (t._id === taskId ? updatedTask : t)) });
+    } catch (err: any) {
       throw err;
     }
   },

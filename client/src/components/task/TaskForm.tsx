@@ -1,14 +1,18 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 
 import { taskFormSchema, TaskFormData } from '@/utils/task.validation';
 import { useTaskStore } from '@/store/useTaskStore';
+import { generateAISubtasksApi } from '@/services/ai.service';
+import { Subtask } from '@/types/task';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import AISubtaskButton from './AISubtaskButton';
+import AISubtaskPreview from './AISubtaskPreview';
 
 const formatForDateTimeLocal = (dateStr?: string | null): string => {
   if (!dateStr) return '';
@@ -24,6 +28,8 @@ const formatForDateTimeLocal = (dateStr?: string | null): string => {
 
 export const TaskForm = () => {
   const { modalMode, selectedTask, createTask, updateTask, isSubmitting, closeModal } = useTaskStore();
+  const [subtasks, setSubtasks] = useState<Subtask[]>([]);
+  const [isAiLoading, setIsAiLoading] = useState(false);
 
   const minDateTime = formatForDateTimeLocal(new Date().toISOString());
 
@@ -31,6 +37,7 @@ export const TaskForm = () => {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<TaskFormData>({
     resolver: zodResolver(taskFormSchema),
@@ -42,6 +49,9 @@ export const TaskForm = () => {
     },
   });
 
+  const watchTitle = watch('title');
+  const watchDescription = watch('description');
+
   useEffect(() => {
     if (modalMode === 'edit' && selectedTask) {
       reset({
@@ -50,6 +60,7 @@ export const TaskForm = () => {
         priority: selectedTask.priority || 'medium',
         dueDate: formatForDateTimeLocal(selectedTask.dueDate),
       });
+      setSubtasks(selectedTask.subtasks || []);
     } else {
       reset({
         title: '',
@@ -57,15 +68,63 @@ export const TaskForm = () => {
         priority: 'medium',
         dueDate: '',
       });
+      setSubtasks([]);
     }
   }, [modalMode, selectedTask, reset]);
 
+  const handleSuggestSubtasks = async () => {
+    if (!watchTitle || watchTitle.trim().length === 0) {
+      toast.error('Please enter a task title first');
+      return;
+    }
+
+    setIsAiLoading(true);
+    try {
+      const generated = await generateAISubtasksApi({
+        title: watchTitle,
+        description: watchDescription,
+      });
+
+      if (generated && generated.length > 0) {
+        setSubtasks(generated.map((s) => ({ title: s.title, completed: false })));
+        toast.success(`Generated ${generated.length} AI subtask suggestions!`);
+      }
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to generate AI subtasks';
+      toast.error(errorMsg);
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
+  const handleSubtaskTitleChange = (index: number, newTitle: string) => {
+    const updated = [...subtasks];
+    updated[index].title = newTitle;
+    setSubtasks(updated);
+  };
+
+  const handleToggleSubtask = (index: number) => {
+    const updated = [...subtasks];
+    updated[index].completed = !updated[index].completed;
+    setSubtasks(updated);
+  };
+
+  const handleRemoveSubtask = (index: number) => {
+    setSubtasks(subtasks.filter((_, i) => i !== index));
+  };
+
+  const handleAddSubtask = () => {
+    setSubtasks([...subtasks, { title: '', completed: false }]);
+  };
+
   const onSubmit = async (data: TaskFormData) => {
     try {
+      const validSubtasks = subtasks.filter((s) => s.title.trim().length > 0);
+
       if (modalMode === 'create') {
-        await createTask(data);
+        await createTask({ ...data, subtasks: validSubtasks });
       } else if (modalMode === 'edit' && selectedTask) {
-        await updateTask(selectedTask._id, data);
+        await updateTask(selectedTask._id, { ...data, subtasks: validSubtasks });
       }
     } catch (error: any) {
       const errorMsg = error.message || error.errors?.[0]?.message || 'Operation failed';
@@ -75,12 +134,23 @@ export const TaskForm = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <Input
-        label="Title"
-        placeholder="Enter task title"
-        {...register('title')}
-        error={errors.title?.message}
-      />
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-gray-700">Task Details</label>
+          <AISubtaskButton
+            onClick={handleSuggestSubtasks}
+            isLoading={isAiLoading}
+            disabled={!watchTitle || watchTitle.trim().length === 0}
+          />
+        </div>
+
+        <Input
+          label="Title"
+          placeholder="Enter task title"
+          {...register('title')}
+          error={errors.title?.message}
+        />
+      </div>
 
       <div className="w-full flex flex-col gap-1">
         <label className="text-sm font-medium text-gray-700">Description</label>
@@ -116,6 +186,14 @@ export const TaskForm = () => {
           error={errors.dueDate?.message}
         />
       </div>
+
+      <AISubtaskPreview
+        subtasks={subtasks}
+        onTitleChange={handleSubtaskTitleChange}
+        onToggleComplete={handleToggleSubtask}
+        onRemove={handleRemoveSubtask}
+        onAddSubtask={handleAddSubtask}
+      />
 
       <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
         <button

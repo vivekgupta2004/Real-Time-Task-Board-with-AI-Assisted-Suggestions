@@ -1,5 +1,15 @@
 import { z } from 'zod';
 
+export const subtaskInputSchema = z.object({
+  _id: z.string().optional(),
+  title: z
+    .string({ required_error: 'Subtask title is required' })
+    .trim()
+    .min(1, 'Subtask title cannot be empty')
+    .max(100, 'Subtask title cannot exceed 100 characters'),
+  completed: z.boolean().optional().default(false),
+});
+
 export const createTaskSchema = z.object({
   title: z
     .string({ required_error: 'Title is required' })
@@ -15,6 +25,7 @@ export const createTaskSchema = z.object({
     .string({ required_error: 'Due date is required' })
     .refine((val) => !isNaN(Date.parse(val)), { message: 'Invalid date format' })
     .refine((val) => new Date(val) > new Date(), { message: 'Due date must be in the future' }),
+  subtasks: z.array(subtaskInputSchema).optional(),
 });
 
 export const updateTaskSchema = z.object({
@@ -35,6 +46,7 @@ export const updateTaskSchema = z.object({
     .refine((val) => !isNaN(Date.parse(val)), { message: 'Invalid date format' })
     .refine((val) => new Date(val) > new Date(), { message: 'Due date must be in the future' })
     .optional(),
+  subtasks: z.array(subtaskInputSchema).optional(),
 });
 
 export const createSubtaskSchema = z.object({
@@ -59,3 +71,4 @@ export type CreateTaskInput = z.infer<typeof createTaskSchema>;
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;
 export type CreateSubtaskInput = z.infer<typeof createSubtaskSchema>;
 export type UpdateSubtaskInput = z.infer<typeof updateSubtaskSchema>;
+

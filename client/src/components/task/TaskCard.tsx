@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Task } from '@/types/task';
 import { Calendar, Clock, CheckCircle2, Pencil, Trash2, Check } from 'lucide-react';
 import { useTaskStore } from '@/store/useTaskStore';
+import SubtaskList from './SubtaskList';
 import toast from 'react-hot-toast';
 
 interface TaskCardProps {
@@ -11,9 +12,10 @@ interface TaskCardProps {
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
-  const { openEditModal, openDeleteModal, completeTask } = useTaskStore();
+  const { openEditModal, openDeleteModal, completeTask, toggleSubtask } = useTaskStore();
   const [isCompleting, setIsCompleting] = useState(false);
   const isCompleted = task.status === 'completed';
+  const hasSubtasks = task.subtasks && task.subtasks.length > 0;
 
   const formatLocalDateTime = (dateStr?: string | null): string => {
     if (!dateStr) return 'N/A';
@@ -40,6 +42,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     }
   };
 
+  const handleToggleSubtask = async (taskId: string, subtaskId: string, currentCompleted: boolean) => {
+    try {
+      await toggleSubtask(taskId, subtaskId, !currentCompleted);
+    } catch (error: any) {
+      toast.error('Failed to update subtask');
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between group">
       <div>
@@ -48,11 +58,13 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
             className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold capitalize ${
               isCompleted
                 ? 'bg-emerald-100 text-emerald-800'
+                : task.status === 'in_progress'
+                ? 'bg-blue-100 text-blue-800'
                 : 'bg-amber-100 text-amber-800'
             }`}
           >
             {isCompleted ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-            {task.status}
+            {task.status.replace('_', ' ')}
           </span>
 
           <div className="flex items-center gap-2">
@@ -91,6 +103,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
 
         <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-1">{task.title}</h3>
         <p className="text-sm text-gray-600 mb-4 line-clamp-2 leading-relaxed">{task.description}</p>
+
+        {hasSubtasks && (
+          <SubtaskList
+            taskId={task._id}
+            subtasks={task.subtasks!}
+            onToggle={handleToggleSubtask}
+          />
+        )}
       </div>
 
       <div className="pt-4 border-t border-gray-100 flex flex-col gap-2">
@@ -100,7 +120,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
             <span>Due: {formatLocalDateTime(task.dueDate)}</span>
           </div>
 
-          {!isCompleted && (
+          {!isCompleted && !hasSubtasks && (
             <button
               onClick={handleComplete}
               disabled={isCompleting}

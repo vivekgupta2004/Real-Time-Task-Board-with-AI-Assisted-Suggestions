@@ -1,9 +1,10 @@
-export type TaskStatus = 'pending' | 'completed';
+export type TaskStatus = 'pending' | 'in_progress' | 'completed';
 
 export interface Subtask {
   _id?: string;
   title: string;
   completed: boolean;
+  completedAt?: string | null;
 }
 
 export interface Task {
