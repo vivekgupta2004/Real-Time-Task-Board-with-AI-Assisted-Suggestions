@@ -40,7 +40,8 @@ interface TaskState {
   viewMode: 'kanban' | 'grid';
   setViewMode: (mode: 'kanban' | 'grid') => void;
 
-  fetchTasks: () => Promise<void>;
+  fetchTasks: (options?: { silent?: boolean }) => Promise<void>;
+
   createTask: (data: TaskFormData & { subtasks?: any[] }) => Promise<void>;
   updateTask: (id: string, data: Partial<TaskFormData> & { status?: TaskStatus; subtasks?: any[] }) => Promise<void>;
 
@@ -108,9 +109,10 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   viewMode: 'kanban',
   setViewMode: (mode) => set({ viewMode: mode }),
 
-  fetchTasks: async () => {
-
-    set({ isLoading: true, error: null });
+  fetchTasks: async (options?: { silent?: boolean }) => {
+    if (!options?.silent) {
+      set({ isLoading: true, error: null });
+    }
     try {
       const { page, limit, searchQuery, statusFilter, priorityFilter, sortBy, order } = get();
       const result = await fetchTasksApi({
@@ -134,7 +136,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     try {
       await createTaskApi(data);
       set({ isSubmitting: false, isModalOpen: false });
-      await get().fetchTasks();
+      await get().fetchTasks({ silent: true });
     } catch (err: any) {
       set({ isSubmitting: false });
       throw err;
@@ -151,7 +153,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         isModalOpen: false,
         selectedTask: null,
       });
-      await get().fetchTasks();
+      await get().fetchTasks({ silent: true });
     } catch (err: any) {
       set({ isSubmitting: false });
       throw err;
@@ -166,7 +168,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         tasks: get().tasks.map((t) => (t._id === id ? completedTask : t)),
         isSubmitting: false,
       });
-      await get().fetchTasks();
+      await get().fetchTasks({ silent: true });
     } catch (err: any) {
       set({ isSubmitting: false });
       throw err;
@@ -178,7 +180,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     try {
       await deleteTaskApi(id);
       set({ isSubmitting: false, isDeleteModalOpen: false, taskToDelete: null });
-      await get().fetchTasks();
+      await get().fetchTasks({ silent: true });
     } catch (err: any) {
       set({ isSubmitting: false });
       throw err;
@@ -189,7 +191,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     try {
       const updatedTask = await addSubtaskApi(taskId, title);
       set({ tasks: get().tasks.map((t) => (t._id === taskId ? updatedTask : t)) });
-      await get().fetchTasks();
+      await get().fetchTasks({ silent: true });
     } catch (err: any) {
       throw err;
     }
@@ -199,7 +201,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     try {
       const updatedTask = await updateSubtaskApi(taskId, subtaskId, { completed });
       set({ tasks: get().tasks.map((t) => (t._id === taskId ? updatedTask : t)) });
-      await get().fetchTasks();
+      await get().fetchTasks({ silent: true });
     } catch (err: any) {
       throw err;
     }
@@ -209,7 +211,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     try {
       const updatedTask = await deleteSubtaskApi(taskId, subtaskId);
       set({ tasks: get().tasks.map((t) => (t._id === taskId ? updatedTask : t)) });
-      await get().fetchTasks();
+      await get().fetchTasks({ silent: true });
     } catch (err: any) {
       throw err;
     }
@@ -217,16 +219,17 @@ export const useTaskStore = create<TaskState>((set, get) => ({
 
   // Realtime handlers
   onTaskCreated: (task) => {
-    get().fetchTasks();
+    get().fetchTasks({ silent: true });
   },
 
   onTaskUpdated: (task) => {
-    get().fetchTasks();
+    get().fetchTasks({ silent: true });
   },
 
   onTaskDeleted: (taskId) => {
-    get().fetchTasks();
+    get().fetchTasks({ silent: true });
   },
+
 
 
   setPage: async (page) => {

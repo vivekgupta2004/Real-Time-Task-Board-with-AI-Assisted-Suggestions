@@ -134,9 +134,10 @@ export const KanbanBoard = () => {
         <h3 className="text-lg font-bold text-rose-900 dark:text-rose-300">Failed to Load Tasks</h3>
         <p className="text-sm text-rose-700 dark:text-rose-400 mt-1 mb-5">{error}</p>
         <button
-          onClick={fetchTasks}
+          onClick={() => fetchTasks()}
           className="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-semibold shadow-xs transition"
         >
+
           <RefreshCw className="w-4 h-4" />
           <span>Retry</span>
         </button>

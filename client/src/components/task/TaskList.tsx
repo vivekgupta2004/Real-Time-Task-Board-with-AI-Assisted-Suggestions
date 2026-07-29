@@ -51,9 +51,10 @@ export const TaskList = () => {
         <h3 className="text-lg font-bold text-red-900">Failed to Load Tasks</h3>
         <p className="text-sm text-red-700 mt-1 mb-5">{error}</p>
         <button
-          onClick={fetchTasks}
+          onClick={() => fetchTasks()}
           className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-semibold shadow-sm transition"
         >
+
           <RefreshCw className="w-4 h-4" />
           <span>Retry</span>
         </button>
