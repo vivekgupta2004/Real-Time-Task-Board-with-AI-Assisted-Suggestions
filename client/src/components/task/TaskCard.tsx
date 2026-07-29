@@ -146,9 +146,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
             taskId={task._id}
             subtasks={task.subtasks!}
             onToggle={handleToggleSubtask}
+            parentStatus={task.status}
             isParentCompleted={isCompleted}
           />
         )}
+
       </div>
 
       <div className="pt-4 border-t border-gray-100 flex flex-col gap-2">

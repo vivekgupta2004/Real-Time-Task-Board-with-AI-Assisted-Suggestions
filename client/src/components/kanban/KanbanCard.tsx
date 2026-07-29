@@ -59,6 +59,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({ task, onDragStart }) => 
   const completedSubtasks = subtasks.filter((s) => s.completed).length;
   const subtaskProgress = totalSubtasks > 0 ? Math.round((completedSubtasks / totalSubtasks) * 100) : 0;
   const isCompleted = task.status === 'completed';
+  const isPending = task.status === 'pending';
 
   const handleStatusSelect = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     e.stopPropagation();
@@ -182,12 +183,18 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({ task, onDragStart }) => 
                 key={st._id || st.title}
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (isPending && !st.completed) {
+                    toast.error('Move this task to In Progress before completing subtasks.');
+                    return;
+                  }
                   if (!isCompleted && st._id) {
                     toggleSubtask(task._id, st._id, !st.completed);
                   }
                 }}
                 className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg border transition-all duration-150 ${
-                  isCompleted ? 'cursor-not-allowed opacity-80' : 'cursor-pointer hover:bg-slate-100/90 dark:hover:bg-slate-800'
+                  isCompleted || (isPending && !st.completed)
+                    ? 'cursor-not-allowed opacity-80'
+                    : 'cursor-pointer hover:bg-slate-100/90 dark:hover:bg-slate-800'
                 } ${
                   st.completed
                     ? 'bg-emerald-50/90 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200'
@@ -198,6 +205,8 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({ task, onDragStart }) => 
                   className={`w-4 h-4 rounded flex items-center justify-center border transition-all duration-150 shrink-0 ${
                     st.completed
                       ? 'bg-emerald-600 border-emerald-600 text-white'
+                      : isPending
+                      ? 'border-slate-300 bg-slate-100 cursor-not-allowed'
                       : 'border-slate-400 bg-white dark:bg-slate-900'
                   }`}
                 >
@@ -213,6 +222,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({ task, onDragStart }) => 
                 </span>
               </div>
             ))}
+
           </div>
         </div>
       )}

@@ -9,6 +9,7 @@ interface SubtaskListProps {
   taskId: string;
   subtasks: Subtask[];
   onToggle: (taskId: string, subtaskId: string, currentCompleted: boolean) => void;
+  parentStatus?: string;
   isParentCompleted?: boolean;
 }
 
@@ -16,6 +17,7 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({
   taskId,
   subtasks,
   onToggle,
+  parentStatus,
   isParentCompleted = false,
 }) => {
   if (!subtasks || subtasks.length === 0) return null;
@@ -50,6 +52,7 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({
             taskId={taskId}
             subtask={subtask}
             onToggle={onToggle}
+            parentStatus={parentStatus}
             isParentCompleted={isParentCompleted}
           />
         ))}
@@ -59,4 +62,3 @@ export const SubtaskList: React.FC<SubtaskListProps> = ({
 };
 
 export default SubtaskList;
-

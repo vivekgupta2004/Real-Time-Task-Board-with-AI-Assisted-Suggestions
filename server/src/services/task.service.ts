@@ -43,28 +43,24 @@ const recalculateSubtaskStatus = async (userId: string, task: ITask): Promise<vo
   const total = task.subtasks.length;
   const completedCount = task.subtasks.filter((s: any) => s.completed).length;
 
-  if (completedCount === 0) {
-    task.status = 'pending';
-    task.completedAt = null;
-  } else if (completedCount < total) {
-    task.status = 'in_progress';
-    task.completedAt = null;
-  } else {
+  // Only auto-complete the parent task when ALL subtasks are completed
+  if (completedCount === total && total > 0) {
     task.status = 'completed';
     if (!task.completedAt) {
       task.completedAt = new Date();
     }
-  }
 
-  if (previousStatus !== 'completed' && task.status === 'completed') {
-    await createNotification({
-      userId,
-      title: 'Task Completed',
-      message: `Your task '${task.title}' has been completed.`,
-      type: 'completed',
-    });
+    if (previousStatus !== 'completed') {
+      await createNotification({
+        userId,
+        title: 'Task Completed',
+        message: `Your task '${task.title}' has been completed.`,
+        type: 'completed',
+      });
+    }
   }
 };
+
 
 export const createTask = async (userId: string, data: CreateTaskInput): Promise<ITask> => {
   const dueDate = new Date(data.dueDate);
@@ -286,6 +282,23 @@ export const updateTask = async (
 
 
   if (data.subtasks !== undefined && Array.isArray(data.subtasks)) {
+    const targetStatus =
+      data.status !== undefined && ['pending', 'in_progress', 'completed'].includes(data.status)
+        ? data.status
+        : task.status;
+
+    if (targetStatus === 'pending') {
+      const existingMap = new Map((task.subtasks || []).map((st: any) => [st._id ? st._id.toString() : st.title, st]));
+      for (const s of data.subtasks) {
+        const existing: any = s._id ? existingMap.get(s._id.toString()) : existingMap.get(s.title);
+        const wasCompleted = existing ? Boolean(existing.completed) : false;
+        if (s.completed && !wasCompleted) {
+          throw new AppError('Move this task to In Progress before completing subtasks.', 400);
+        }
+      }
+
+    }
+
     task.subtasks = data.subtasks.map((s: any) => ({
       ...(s._id ? { _id: s._id } : {}),
       title: s.title,
@@ -294,6 +307,7 @@ export const updateTask = async (
     })) as any;
     await recalculateSubtaskStatus(userId, task);
   }
+
 
   await task.save();
 
@@ -426,9 +440,13 @@ export const updateSubtask = async (
   }
 
   if (data.completed !== undefined) {
+    if (task.status === 'pending' && data.completed && !subtask.completed) {
+      throw new AppError('Move this task to In Progress before completing subtasks.', 400);
+    }
     subtask.completed = data.completed;
     subtask.completedAt = data.completed ? new Date() : null;
   }
+
 
   await recalculateSubtaskStatus(userId, task);
   await task.save();

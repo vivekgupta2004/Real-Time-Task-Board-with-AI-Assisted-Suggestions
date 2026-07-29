@@ -138,10 +138,19 @@ export const TaskForm = () => {
 
   const handleToggleSubtask = (index: number) => {
     if (isReadOnly) return;
+    const currentCompleted = subtasks[index].completed;
+    const isPending = modalMode === 'create' || (modalMode === 'edit' && selectedTask?.status === 'pending');
+
+    if (isPending && !currentCompleted) {
+      toast.error('Move this task to In Progress before completing subtasks.');
+      return;
+    }
+
     const updated = [...subtasks];
     updated[index].completed = !updated[index].completed;
     setSubtasks(updated);
   };
+
 
   const handleRemoveSubtask = (index: number) => {
     if (isReadOnly) return;
