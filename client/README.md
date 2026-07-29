@@ -1,35 +1,33 @@
 # Frontend Documentation - Real-Time Task Board Client
 
-Production-grade Next.js 15 & React 19 application featuring an interactive **Real-Time Kanban Board**, **Socket.IO live synchronization**, **Google Gemini AI-assisted subtask generation**, **Cross-Browser DateTime Picker**, debounced search & filter controls, and responsive UI components.
+Production-grade Next.js 15 & React 19 application featuring an interactive **Real-Time Kanban Board**, **Socket.IO live synchronization**, **Google Gemini AI-assisted subtask generation**, debounced search & filter controls, and responsive UI components.
 
 ---
 
-## 📌 Features
+## Features
 
-- 📋 **Interactive Real-Time Kanban Board**:
+- **Interactive Real-Time Kanban Board**:
   - Drag-and-drop task status management across Pending, In Progress, and Completed columns.
   - In-card status dropdown (`Pending`, `In Progress`, `Completed`) for instant updates.
   - Interactive subtask checklists directly inside Kanban cards with automatic parent task completion.
-- ⚡ **Real-Time Board Sync**:
+- **Real-Time Board Sync**:
   - Direct WebSocket connection using `socket.io-client`.
   - Automatically updates local task lists, Kanban columns, and notification indicators when tasks are created, edited, completed, or deleted across active sessions.
-- 🤖 **AI Subtask Generation UX**:
+- **AI Subtask Generation UX**:
   - Interactive AI suggest subtasks form workflow powered by Google Gemini.
   - Form controls automatically locked with progress status banner during generation (`Generating AI subtasks, please wait...`).
   - Full subtask review, title editing, completion toggle, and removal before saving.
-- 📅 **Cross-Browser DateTime Picker**:
-  - Custom popover calendar and time selector providing 100% consistent UX across Chrome, Edge, Firefox, Safari (macOS & iOS), and Arc Browser.
-- 🛡 **Route Protection**:
+- **Route Protection**:
   - `ProtectedRoute`: Redirects unauthenticated users to `/`.
   - `GuestRoute`: Redirects authenticated users from `/login` & `/signup` to `/dashboard`.
-- 📱 **Mobile & Desktop Layout Optimization**:
+- **Mobile & Desktop Layout Optimization**:
   - Responsive horizontal snap-scrolling on mobile devices and responsive 3-column grid on desktop.
   - Mobile responsive notification dropdown with zero horizontal overflow.
   - Server-side paginated grid and board views.
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 | Technology | Purpose |
 |---|---|
@@ -45,7 +43,7 @@ Production-grade Next.js 15 & React 19 application featuring an interactive **Re
 
 ---
 
-## 📂 Folder Structure
+## Folder Structure
 
 ```text
 client/
@@ -80,7 +78,7 @@ client/
 
 ---
 
-## ⚙️ Environment Variables
+## Environment Variables
 
 Create `.env.local` in the `client/` directory:
 
@@ -91,7 +89,7 @@ NEXT_PUBLIC_SOCKET_URL=http://localhost:5000
 
 ---
 
-## 🚀 Running Development & Production
+## Running Development & Production
 
 ### Development Mode
 
@@ -110,7 +108,7 @@ npm start
 
 ---
 
-## 🗃 Global State Architecture (Zustand)
+## Global State Architecture (Zustand)
 
 ```mermaid
 graph TD
@@ -133,7 +131,7 @@ graph TD
 
 ---
 
-## 🔒 Route Protection Flow
+## Route Protection Flow
 
 ```mermaid
 sequenceDiagram
@@ -155,6 +153,6 @@ sequenceDiagram
 
 ---
 
-## 📜 License
+## License
 
 This project is licensed under the [MIT License](../LICENSE).

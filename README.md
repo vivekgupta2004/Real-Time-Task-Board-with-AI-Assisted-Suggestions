@@ -10,28 +10,27 @@
 [![Firebase](https://img.shields.io/badge/Firebase-Admin-FFCA28?logo=firebase)](https://firebase.google.com/)
 [![Google Gemini AI](https://img.shields.io/badge/Google_Gemini-AI_Subtasks-8E75B2?logo=google)](https://ai.google.dev/)
 
-A production-ready, full-stack Task Management application featuring an interactive **Real-Time Kanban Board**, **Socket.IO live synchronization**, **AI-powered subtask generation using Google Gemini**, **Firebase push & in-app notifications**, **JWT authentication**, **cross-browser DateTime picker**, and **server-side MongoDB pagination, searching, filtering, and sorting**.
+A production-ready, full-stack Task Management application featuring an interactive **Real-Time Kanban Board**, **Socket.IO live synchronization**, **AI-powered subtask generation using Google Gemini**, **Firebase push & in-app notifications**, **JWT authentication**, and **server-side MongoDB pagination, searching, filtering, and sorting**.
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
-- 📋 **Interactive Real-Time Kanban Board**: Drag-and-drop task status management across Pending, In Progress, and Completed columns with instant card updates.
-- ⚡ **Real-Time Task Synchronization**: Multi-user live board updates powered by Socket.IO without page refreshes.
-- 🤖 **Google Gemini AI Subtask Suggestions**: Automated AI subtask breakdown analyzing task title and description with UI locks during generation.
-- 🔒 **JWT Authentication**: Secure Access & Refresh Token authorization with strict email domain validation.
-- 🔔 **Firebase Notifications**: In-app and push notification system backed by Firestore & Socket.IO.
-- 🔍 **Server-Side Search, Filter & Sort Engine**:
+- **Interactive Real-Time Kanban Board**: Drag-and-drop task status management across Pending, In Progress, and Completed columns with instant card updates.
+- **Real-Time Task Synchronization**: Multi-user live board updates powered by Socket.IO without page refreshes.
+- **Google Gemini AI Subtask Suggestions**: Automated AI subtask breakdown analyzing task title and description with UI locks during generation.
+- **JWT Authentication**: Secure Access & Refresh Token authorization with strict email domain validation.
+- **Firebase Notifications**: In-app and push notification system backed by Firestore & Socket.IO.
+- **Server-Side Search, Filter & Sort Engine**:
   - **Pagination**: Server-side paginated queries with custom pagination bar.
   - **Case-Insensitive Search**: Instant search by task title.
   - **Filtering**: Filter tasks by Status (`pending`, `in_progress`, `completed`) and Priority (`low`, `medium`, `high`).
   - **Sorting**: Multi-field sorting by Priority (`high` → `medium` → `low`), Due Date, Creation Date, and Title.
-- 📅 **Cross-Browser DateTime Picker**: Production-ready, responsive DateTime picker compatible across Chrome, Edge, Firefox, Safari (macOS/iOS), and Arc Browser.
-- 🎨 **Responsive SaaS Design**: Modern visual layout optimized for Mobile, Tablet, Laptop, and Desktop screens.
+- **Responsive SaaS Design**: Modern visual layout optimized for Mobile, Tablet, Laptop, and Desktop screens.
 
 ---
 
-## 🔑 Demo Account
+## Demo Account
 
 To quickly explore all features of the application without creating your own tasks, use the following demo account:
 
@@ -54,7 +53,7 @@ The demo account includes pre-populated data to showcase:
 
 ---
 
-## 🏗 Architecture Overview
+## Architecture Overview
 
 ```mermaid
 graph TD
@@ -73,7 +72,7 @@ graph TD
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Frontend
 - **Framework**: Next.js 15 (App Router), React 19
@@ -95,7 +94,7 @@ graph TD
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 .
@@ -133,7 +132,7 @@ graph TD
 
 ---
 
-## ⚡ Quick Start & Installation
+## Quick Start & Installation
 
 ### Prerequisites
 - **Node.js**: v18.x or higher
@@ -216,25 +215,25 @@ The frontend app will be accessible at `http://localhost:3000`.
 
 ---
 
-## 📘 Documentation Links
+## Documentation Links
 
 For detailed, component-level documentation:
 
-- 📘 [Backend Documentation](file:///e:/Real-Time%20Task%20Board%20with%20AI-Assisted%20Suggestions/server/README.md)
-- 📙 [Frontend Documentation](file:///e:/Real-Time%20Task%20Board%20with%20AI-Assisted%20Suggestions/client/README.md)
+- [Backend Documentation](file:///e:/Real-Time%20Task%20Board%20with%20AI-Assisted%20Suggestions/server/README.md)
+- [Frontend Documentation](file:///e:/Real-Time%20Task%20Board%20with%20AI-Assisted%20Suggestions/client/README.md)
 
 ---
 
-## 🔮 Future Improvements
+## Future Improvements
 
-- 🤖 **AI Task Creation**: Allow users to create an entire task using AI. The AI analyzes the task title and description to automatically generate subtasks based on task complexity:
+- **AI Task Creation**: Allow users to create an entire task using AI. The AI analyzes the task title and description to automatically generate subtasks based on task complexity:
   - **High Priority**: Generate 3–4 subtasks
   - **Medium Priority**: Generate 2–3 subtasks
   - **Low Priority**: Generate 1–2 subtasks
-- 📈 **Analytics Dashboard**: Graphical insights into task completion rate, velocity, and priority distribution.
+- **Analytics Dashboard**: Graphical insights into task completion rate, velocity, and priority distribution.
 
 ---
 
-## 📜 License
+## License
 
 This project is licensed under the [MIT License](LICENSE).

@@ -4,35 +4,35 @@ Production-grade Express.js & TypeScript REST API and Socket.IO server powering 
 
 ---
 
-## 📌 Features
+## Features
 
-- 🔐 **Authentication & JWT Session Management**:
+- **Authentication & JWT Session Management**:
   - Secure signup and login with bcrypt password hashing (10 salt rounds).
   - Dual JWT token system (Short-lived Access Token, Long-lived Refresh Token).
   - Strict password validation (min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special character).
   - Strict email provider validation (allows only `@gmail.com`, `@outlook.com`, `@yahoo.com`, `@hotmail.com`, and `@icloud.com`).
-- 📋 **Kanban & Task Management Logic**:
+- **Kanban & Task Management Logic**:
   - Status updates (`pending` ↔ `in_progress` ↔ `completed`) saved directly in MongoDB.
   - Automatic parent task completion when all subtasks become completed.
   - Automatic subtask completion when parent task is moved directly to Completed status.
-- ⚡ **Real-Time Sync (Socket.IO)**:
+- **Real-Time Sync (Socket.IO)**:
   - User-isolated WebSocket rooms (`user:<userId>`).
   - Broadcasts live events for task creation, status updates, completion, deletion, and notifications.
-- 🤖 **Google Gemini AI Integration**:
+- **Google Gemini AI Integration**:
   - Automatically parses task title and description to produce structured, actionable subtasks using `@google/genai`.
-- 🔍 **Server-Side MongoDB Search, Filter & Sort Engine**:
+- **Server-Side MongoDB Search, Filter & Sort Engine**:
   - Executed directly inside MongoDB queries (`skip`, `limit`, `$regex`, `$switch` priority weight aggregations).
   - Configurable page size with multi-field sorting by Priority, Due Date, Creation Date, and Title.
-- 🔔 **Firebase Admin SDK Notification Engine & Due Date Logic**:
+- **Firebase Admin SDK Notification Engine & Due Date Logic**:
   - Initializes via environment variables (`FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`).
   - Automatically sends 24-hour due date reminders ONLY for active tasks (`Pending` or `In Progress`). Completed tasks are automatically skipped and never receive due reminders.
   - Persists notifications to Firestore with in-memory fallback.
-- 📘 **Swagger OpenAPI Specs**:
+- **Swagger OpenAPI Specs**:
   - Self-documenting API available at `/api-docs`.
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 | Technology | Purpose |
 |---|---|
@@ -48,7 +48,7 @@ Production-grade Express.js & TypeScript REST API and Socket.IO server powering 
 
 ---
 
-## 📂 Folder Structure
+## Folder Structure
 
 ```text
 server/
@@ -70,7 +70,7 @@ server/
 
 ---
 
-## ⚙️ Environment Variables
+## Environment Variables
 
 Copy `.env.example` to `.env` and populate the following variables:
 
@@ -102,7 +102,7 @@ CLIENT_URL=http://localhost:3000
 
 ---
 
-## 🚀 Running the Server
+## Running the Server
 
 ### Development Mode
 
@@ -119,46 +119,46 @@ npm start
 
 ---
 
-## 📄 API Endpoints Summary
+## API Endpoints Summary
 
 ### Authentication Routes (`/api/auth`)
 
 | Method | Endpoint | Description | Auth Required |
 |---|---|---|---|
-| `POST` | `/api/auth/signup` | Register new user account | ❌ No |
-| `POST` | `/api/auth/login` | Authenticate user & get JWT tokens | ❌ No |
-| `POST` | `/api/auth/logout` | Invalidate user session | ✅ Yes |
-| `GET` | `/api/auth/me` | Fetch authenticated user profile | ✅ Yes |
+| `POST` | `/api/auth/signup` | Register new user account | No |
+| `POST` | `/api/auth/login` | Authenticate user & get JWT tokens | No |
+| `POST` | `/api/auth/logout` | Invalidate user session | Yes |
+| `GET` | `/api/auth/me` | Fetch authenticated user profile | Yes |
 
 ### Task Routes (`/api/tasks`)
 
 | Method | Endpoint | Description | Auth Required |
 |---|---|---|---|
-| `GET` | `/api/tasks` | Get paginated, filtered, searched & sorted tasks | ✅ Yes |
-| `POST` | `/api/tasks` | Create a new task (with optional subtasks) | ✅ Yes |
-| `GET` | `/api/tasks/:id` | Get specific task details | ✅ Yes |
-| `PUT` | `/api/tasks/:id` | Update task details, status (`pending`, `in_progress`, `completed`), or subtasks | ✅ Yes |
-| `DELETE` | `/api/tasks/:id` | Delete a task | ✅ Yes |
-| `PATCH` | `/api/tasks/:id/complete` | Mark task as completed | ✅ Yes |
-| `PATCH` | `/api/tasks/:id/subtasks/:subtaskId/toggle` | Toggle subtask completion status | ✅ Yes |
+| `GET` | `/api/tasks` | Get paginated, filtered, searched & sorted tasks | Yes |
+| `POST` | `/api/tasks` | Create a new task (with optional subtasks) | Yes |
+| `GET` | `/api/tasks/:id` | Get specific task details | Yes |
+| `PUT` | `/api/tasks/:id` | Update task details, status (`pending`, `in_progress`, `completed`), or subtasks | Yes |
+| `DELETE` | `/api/tasks/:id` | Delete a task | Yes |
+| `PATCH` | `/api/tasks/:id/complete` | Mark task as completed | Yes |
+| `PATCH` | `/api/tasks/:id/subtasks/:subtaskId/toggle` | Toggle subtask completion status | Yes |
 
 ### AI Routes (`/api/ai`)
 
 | Method | Endpoint | Description | Auth Required |
 |---|---|---|---|
-| `POST` | `/api/ai/suggest-subtasks` | Generate AI subtask suggestions using Gemini | ✅ Yes |
+| `POST` | `/api/ai/suggest-subtasks` | Generate AI subtask suggestions using Gemini | Yes |
 
 ### Notification Routes (`/api/notifications`)
 
 | Method | Endpoint | Description | Auth Required |
 |---|---|---|---|
-| `GET` | `/api/notifications` | Get user notifications from Firestore | ✅ Yes |
-| `PATCH` | `/api/notifications/:id/read` | Mark single notification as read | ✅ Yes |
-| `PATCH` | `/api/notifications/read-all` | Mark all notifications as read | ✅ Yes |
+| `GET` | `/api/notifications` | Get user notifications from Firestore | Yes |
+| `PATCH` | `/api/notifications/:id/read` | Mark single notification as read | Yes |
+| `PATCH` | `/api/notifications/read-all` | Mark all notifications as read | Yes |
 
 ---
 
-## 🗄 Database Schema & ER Diagram
+## Database Schema & ER Diagram
 
 ```mermaid
 erDiagram
@@ -201,7 +201,7 @@ erDiagram
 
 ---
 
-## 🔐 Security Considerations
+## Security Considerations
 
 1. **Strict Regex Validation**:
    - Emails restricted to `@gmail.com`, `@outlook.com`, `@yahoo.com`, `@hotmail.com`, `@icloud.com`.
@@ -215,6 +215,6 @@ erDiagram
 
 ---
 
-## 📜 License
+## License
 
 This project is licensed under the [MIT License](../LICENSE).
