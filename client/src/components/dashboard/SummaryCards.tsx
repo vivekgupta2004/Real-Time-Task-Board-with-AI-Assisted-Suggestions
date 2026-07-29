@@ -5,12 +5,12 @@ import { Layers, Clock, PlayCircle, CheckCircle2 } from 'lucide-react';
 import { useTaskStore } from '@/store/useTaskStore';
 
 export const SummaryCards = () => {
-  const tasks = useTaskStore((state) => state.tasks);
+  const pagination = useTaskStore((state) => state.pagination);
 
-  const totalTasks = tasks.length;
-  const pendingTasks = tasks.filter((t) => t.status === 'pending').length;
-  const inProgressTasks = tasks.filter((t) => t.status === 'in_progress').length;
-  const completedTasks = tasks.filter((t) => t.status === 'completed').length;
+  const pendingTasks = pagination.pendingCount ?? 0;
+  const inProgressTasks = pagination.inProgressCount ?? 0;
+  const completedTasks = pagination.completedCount ?? 0;
+  const totalTasks = pagination.totalUserTasks ?? (pendingTasks + inProgressTasks + completedTasks);
 
   const cards = [
     {

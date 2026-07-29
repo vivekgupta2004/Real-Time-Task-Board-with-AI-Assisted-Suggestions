@@ -28,7 +28,12 @@ export interface PaginationMeta {
   totalPages: number;
   hasNextPage: boolean;
   hasPreviousPage: boolean;
+  totalUserTasks?: number;
+  pendingCount?: number;
+  inProgressCount?: number;
+  completedCount?: number;
 }
+
 
 export interface GetTasksQueryParams {
   page?: number;

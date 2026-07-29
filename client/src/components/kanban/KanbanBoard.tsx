@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTaskStore } from '@/store/useTaskStore';
 import { Task, TaskStatus } from '@/types/task';
 import KanbanColumn from './KanbanColumn';
@@ -23,16 +23,65 @@ export const KanbanBoard = () => {
   const { tasks, pagination, isLoading, error, fetchTasks, updateTask, setPage } = useTaskStore();
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const scrollAnimRef = useRef<number | null>(null);
+
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
+
+  const stopAutoScroll = () => {
+    if (scrollAnimRef.current) {
+      cancelAnimationFrame(scrollAnimRef.current);
+      scrollAnimRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => stopAutoScroll();
+  }, []);
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, task: Task) => {
     setDraggedTask(task);
     e.dataTransfer.setData('text/plain', task._id);
   };
 
+  const handleBoardDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    if (!containerRef.current || !draggedTask) return;
+
+    const container = containerRef.current;
+    const rect = container.getBoundingClientRect();
+    const clientX = e.clientX;
+
+    const edgeThreshold = 60;
+    let speed = 0;
+
+    if (clientX > 0 && clientX < rect.left + edgeThreshold) {
+      const ratio = (rect.left + edgeThreshold - clientX) / edgeThreshold;
+      speed = -Math.max(4, Math.round(ratio * 14));
+    } else if (clientX > rect.right - edgeThreshold && clientX < window.innerWidth) {
+      const ratio = (clientX - (rect.right - edgeThreshold)) / edgeThreshold;
+      speed = Math.max(4, Math.round(ratio * 14));
+    }
+
+    if (speed !== 0) {
+      if (!scrollAnimRef.current) {
+        const step = () => {
+          if (containerRef.current) {
+            containerRef.current.scrollLeft += speed;
+            scrollAnimRef.current = requestAnimationFrame(step);
+          }
+        };
+        scrollAnimRef.current = requestAnimationFrame(step);
+      }
+    } else {
+      stopAutoScroll();
+    }
+  };
+
   const handleDropTask = async (targetStatus: TaskStatus) => {
+    stopAutoScroll();
     if (!draggedTask) return;
 
     const currentStatus = draggedTask.status;
@@ -101,7 +150,13 @@ export const KanbanBoard = () => {
 
   return (
     <div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 overflow-x-auto snap-x snap-mandatory md:snap-none pb-4">
+      <div
+        ref={containerRef}
+        onDragOver={handleBoardDragOver}
+        onDragLeave={stopAutoScroll}
+        onDragEnd={stopAutoScroll}
+        className="grid grid-cols-1 md:grid-cols-3 gap-6 overflow-x-auto snap-x snap-mandatory md:snap-none pb-4"
+      >
         <KanbanColumn
           status="pending"
           title="Pending"

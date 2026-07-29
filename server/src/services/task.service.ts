@@ -128,6 +128,10 @@ export interface GetUserTasksResult {
     totalPages: number;
     hasNextPage: boolean;
     hasPreviousPage: boolean;
+    totalUserTasks: number;
+    pendingCount: number;
+    inProgressCount: number;
+    completedCount: number;
   };
 }
 
@@ -139,8 +143,8 @@ export const getUserTasks = async (
   const limit = Math.max(1, Math.min(100, Number(queryParams.limit) || 9));
   const skip = (page - 1) * limit;
 
-
-  const query: Record<string, any> = { owner: new Types.ObjectId(userId) };
+  const userObjectId = new Types.ObjectId(userId);
+  const query: Record<string, any> = { owner: userObjectId };
 
   if (queryParams.status && queryParams.status !== 'all') {
     const statusVal = queryParams.status === 'in-progress' ? 'in_progress' : queryParams.status;
@@ -159,7 +163,14 @@ export const getUserTasks = async (
     query.title = { $regex: queryParams.search.trim(), $options: 'i' };
   }
 
-  const totalItems = await Task.countDocuments(query);
+  const [totalItems, pendingCount, inProgressCount, completedCount] = await Promise.all([
+    Task.countDocuments(query),
+    Task.countDocuments({ owner: userObjectId, status: 'pending' }),
+    Task.countDocuments({ owner: userObjectId, status: 'in_progress' }),
+    Task.countDocuments({ owner: userObjectId, status: 'completed' }),
+  ]);
+
+  const totalUserTasks = pendingCount + inProgressCount + completedCount;
   const totalPages = Math.ceil(totalItems / limit) || 1;
 
   const sortOrder: 1 | -1 = queryParams.order === 'asc' ? 1 : -1;
@@ -210,9 +221,14 @@ export const getUserTasks = async (
       totalPages,
       hasNextPage: page < totalPages,
       hasPreviousPage: page > 1,
+      totalUserTasks,
+      pendingCount,
+      inProgressCount,
+      completedCount,
     },
   };
 };
+
 
 
 export const updateTask = async (

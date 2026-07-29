@@ -91,7 +91,12 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     totalPages: 1,
     hasNextPage: false,
     hasPreviousPage: false,
+    totalUserTasks: 0,
+    pendingCount: 0,
+    inProgressCount: 0,
+    completedCount: 0,
   },
+
 
 
   isModalOpen: false,
@@ -146,6 +151,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         isModalOpen: false,
         selectedTask: null,
       });
+      await get().fetchTasks();
     } catch (err: any) {
       set({ isSubmitting: false });
       throw err;
@@ -160,6 +166,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         tasks: get().tasks.map((t) => (t._id === id ? completedTask : t)),
         isSubmitting: false,
       });
+      await get().fetchTasks();
     } catch (err: any) {
       set({ isSubmitting: false });
       throw err;
@@ -182,6 +189,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     try {
       const updatedTask = await addSubtaskApi(taskId, title);
       set({ tasks: get().tasks.map((t) => (t._id === taskId ? updatedTask : t)) });
+      await get().fetchTasks();
     } catch (err: any) {
       throw err;
     }
@@ -191,6 +199,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     try {
       const updatedTask = await updateSubtaskApi(taskId, subtaskId, { completed });
       set({ tasks: get().tasks.map((t) => (t._id === taskId ? updatedTask : t)) });
+      await get().fetchTasks();
     } catch (err: any) {
       throw err;
     }
@@ -200,6 +209,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     try {
       const updatedTask = await deleteSubtaskApi(taskId, subtaskId);
       set({ tasks: get().tasks.map((t) => (t._id === taskId ? updatedTask : t)) });
+      await get().fetchTasks();
     } catch (err: any) {
       throw err;
     }
@@ -211,14 +221,13 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   },
 
   onTaskUpdated: (task) => {
-    set({
-      tasks: get().tasks.map((t) => (t._id === task._id ? task : t)),
-    });
+    get().fetchTasks();
   },
 
   onTaskDeleted: (taskId) => {
     get().fetchTasks();
   },
+
 
   setPage: async (page) => {
     set({ page });
