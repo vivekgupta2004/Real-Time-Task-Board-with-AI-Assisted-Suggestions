@@ -10,27 +10,24 @@
 [![Firebase](https://img.shields.io/badge/Firebase-Admin-FFCA28?logo=firebase)](https://firebase.google.com/)
 [![Google Gemini AI](https://img.shields.io/badge/Google_Gemini-AI_Subtasks-8E75B2?logo=google)](https://ai.google.dev/)
 
-A production-ready, full-stack Task Management application featuring **real-time Socket.IO synchronization**, **AI-powered subtask generation using Google Gemini**, **strict email domain validation**, **server-side MongoDB pagination, filtering, searching, and priority sorting**, and **Light/Dark/System theme support**.
+A production-ready, full-stack Task Management application featuring an interactive **Real-Time Kanban Board**, **Socket.IO live synchronization**, **AI-powered subtask generation using Google Gemini**, **Firebase push & in-app notifications**, **JWT authentication**, **cross-browser DateTime picker**, and **server-side MongoDB pagination, searching, filtering, and sorting**.
 
 ---
 
 ## 🌟 Key Features
 
+- 📋 **Interactive Real-Time Kanban Board**: Drag-and-drop task status management across Pending, In Progress, and Completed columns with instant card updates.
 - ⚡ **Real-Time Task Synchronization**: Multi-user live board updates powered by Socket.IO without page refreshes.
-- 🤖 **Google Gemini AI Subtask Suggestions**: Automated AI subtask breakdown based on task title and description with UI locks during generation.
-- 🔍 **Server-Side MongoDB Query Engine**:
-  - **Pagination**: 9 items per page with custom pagination bar.
-  - **Case-Insensitive Search**: Search by task title.
-  - **Filtering**: Filter by Status (`pending`, `in_progress`, `completed`) and Priority (`low`, `medium`, `high`).
-  - **Sorting**: Priority weight sort (`high` → `medium` → `low`), due date, creation date, and title.
-- 🔒 **Security & Authentication**:
-  - JWT Access & Refresh Token auth flow.
-  - Strict Email Validation accepting only trusted providers (`@gmail.com`, `@outlook.com`, `@yahoo.com`, `@hotmail.com`, `@icloud.com`).
+- 🤖 **Google Gemini AI Subtask Suggestions**: Automated AI subtask breakdown analyzing task title and description with UI locks during generation.
+- 🔒 **JWT Authentication**: Secure Access & Refresh Token authorization with strict email domain validation.
 - 🔔 **Firebase Notifications**: In-app and push notification system backed by Firestore & Socket.IO.
-- 🎨 **Responsive UI & Modern Aesthetics**:
-  - Full Light, Dark, and System mode support with 1-click header switcher.
-  - Custom scrollbars, glassmorphic headers, and mobile menu drawers.
-  - Scroll-locked, ESC-key dismissible modals with backdrop click protection.
+- 🔍 **Server-Side Search, Filter & Sort Engine**:
+  - **Pagination**: Server-side paginated queries with custom pagination bar.
+  - **Case-Insensitive Search**: Instant search by task title.
+  - **Filtering**: Filter tasks by Status (`pending`, `in_progress`, `completed`) and Priority (`low`, `medium`, `high`).
+  - **Sorting**: Multi-field sorting by Priority (`high` → `medium` → `low`), Due Date, Creation Date, and Title.
+- 📅 **Cross-Browser DateTime Picker**: Production-ready, responsive DateTime picker compatible across Chrome, Edge, Firefox, Safari (macOS/iOS), and Arc Browser.
+- 🎨 **Responsive SaaS Design**: Modern visual layout optimized for Mobile, Tablet, Laptop, and Desktop screens.
 
 ---
 
@@ -58,7 +55,7 @@ graph TD
 ### Frontend
 - **Framework**: Next.js 15 (App Router), React 19
 - **Language**: TypeScript 5.7
-- **Styling**: Tailwind CSS v3.4 with dark mode (`class` strategy)
+- **Styling**: Tailwind CSS v3.4
 - **State Management**: Zustand v5
 - **Forms & Validation**: React Hook Form + Zod
 - **Icons & UI**: Lucide React, React Hot Toast
@@ -82,9 +79,16 @@ graph TD
 ├── client/                     # Next.js Frontend Application
 │   ├── src/
 │   │   ├── app/                # App Router (Home, Dashboard, Login, Signup, Notifications)
-│   │   ├── components/         # UI, Layout, Task, Notification, Dashboard Components
-│   │   ├── providers/          # Auth, Socket, Toast, and Theme Providers
-│   │   ├── services/           # Axios API services
+│   │   ├── components/         # UI, Layout, Task, Kanban, Notification, Dashboard Components
+│   │   │   ├── common/         # Pagination, Modal containers
+│   │   │   ├── dashboard/      # DashboardHeader, SummaryCards
+│   │   │   ├── kanban/         # KanbanBoard, KanbanColumn, KanbanCard
+│   │   │   ├── layout/         # Navbar
+│   │   │   ├── notification/   # NotificationCenter, NotificationItem
+│   │   │   ├── task/           # TaskList, TaskCard, TaskForm, AISubtaskButton
+│   │   │   └── ui/             # Input, Button, DateTimePicker
+│   │   ├── providers/          # Auth, Socket, and Toast Providers
+│   │   ├── services/           # Axios API services (task, auth, ai, notification)
 │   │   ├── store/              # Zustand stores (useTaskStore, useAuthStore, etc.)
 │   │   ├── types/              # TypeScript interfaces
 │   │   └── utils/              # Form validation schemas
@@ -149,6 +153,8 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_KEY_HERE\n-----END PRIVA
 
 GEMINI_API_KEY=your_google_gemini_api_key
 GEMINI_MODEL=gemini-3.6-flash
+
+CLIENT_URL=http://localhost:3000
 ```
 
 Start the backend development server:
@@ -187,7 +193,7 @@ The frontend app will be accessible at `http://localhost:3000`.
 
 ---
 
-## 📄 Documentation Links
+## 📘 Documentation Links
 
 For detailed, component-level documentation:
 
@@ -198,9 +204,11 @@ For detailed, component-level documentation:
 
 ## 🔮 Future Improvements
 
-- 📊 **Kanban Drag-and-Drop View**: Interactive drag-and-drop column board.
-- 👥 **Team Task Sharing**: Collaborative project workspaces and task assignment.
-- 📈 **Analytics Dashboard**: Graphical insights into completion rate and weekly velocity.
+- 🤖 **AI Task Creation**: Allow users to create an entire task using AI. The AI analyzes the task title and description to automatically generate subtasks based on task complexity:
+  - **High Priority**: Generate 3–4 subtasks
+  - **Medium Priority**: Generate 2–3 subtasks
+  - **Low Priority**: Generate 1–2 subtasks
+- 📈 **Analytics Dashboard**: Graphical insights into task completion rate, velocity, and priority distribution.
 
 ---
 

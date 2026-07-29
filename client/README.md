@@ -1,30 +1,31 @@
 # Frontend Documentation - Real-Time Task Board Client
 
-Production-grade Next.js 15 & React 19 application featuring real-time Socket.IO board synchronization, Google Gemini AI-assisted subtask generation, Light/Dark/System theme support, debounced search & filter controls, and responsive UI components.
+Production-grade Next.js 15 & React 19 application featuring an interactive **Real-Time Kanban Board**, **Socket.IO live synchronization**, **Google Gemini AI-assisted subtask generation**, **Cross-Browser DateTime Picker**, debounced search & filter controls, and responsive UI components.
 
 ---
 
 ## 📌 Features
 
-- 🎨 **Modern Light / Dark / System Theme Engine**:
-  - Persistent theme mode saved in `localStorage`.
-  - Automatic OS `prefers-color-scheme` listener when in `system` mode.
-  - 1-Click Header Switcher (`ThemeToggle.tsx`).
-  - Pure white (`#ffffff`) background in Light Mode, dark slate (`#020617` / `#0f172a`) in Dark Mode.
+- 📋 **Interactive Real-Time Kanban Board**:
+  - Drag-and-drop task status management across Pending, In Progress, and Completed columns.
+  - In-card status dropdown (`Pending`, `In Progress`, `Completed`) for instant updates.
+  - Interactive subtask checklists directly inside Kanban cards with automatic parent task completion.
 - ⚡ **Real-Time Board Sync**:
   - Direct WebSocket connection using `socket.io-client`.
-  - Automatically updates local task lists and notification indicators when tasks are created, edited, completed, or deleted by any session.
+  - Automatically updates local task lists, Kanban columns, and notification indicators when tasks are created, edited, completed, or deleted across active sessions.
 - 🤖 **AI Subtask Generation UX**:
-  - Interactive AI suggest subtasks form workflow.
-  - Submit button & form controls automatically locked with progress status banner during generation (`Generating AI subtasks, please wait...`).
+  - Interactive AI suggest subtasks form workflow powered by Google Gemini.
+  - Form controls automatically locked with progress status banner during generation (`Generating AI subtasks, please wait...`).
   - Full subtask review, title editing, completion toggle, and removal before saving.
+- 📅 **Cross-Browser DateTime Picker**:
+  - Custom popover calendar and time selector providing 100% consistent UX across Chrome, Edge, Firefox, Safari (macOS & iOS), and Arc Browser.
 - 🛡 **Route Protection**:
   - `ProtectedRoute`: Redirects unauthenticated users to `/`.
   - `GuestRoute`: Redirects authenticated users from `/login` & `/signup` to `/dashboard`.
 - 📱 **Mobile & Desktop Layout Optimization**:
-  - Mobile menu drawer with avatar, name, and quick navigation.
+  - Responsive horizontal snap-scrolling on mobile devices and responsive 3-column grid on desktop.
   - Mobile responsive notification dropdown with zero horizontal overflow.
-  - Dynamic 9-item grid layout with custom pagination bar.
+  - Server-side paginated grid and board views.
 
 ---
 
@@ -35,12 +36,12 @@ Production-grade Next.js 15 & React 19 application featuring real-time Socket.IO
 | **Next.js 15 (App Router)** | React framework & page routing |
 | **React 19** | Component rendering & state hooks |
 | **TypeScript** | Type-safe props and state |
-| **Tailwind CSS v3.4** | Utility-first styling & dark mode |
+| **Tailwind CSS v3.4** | Utility-first responsive styling |
 | **Zustand v5** | Lightweight global state management |
 | **React Hook Form + Zod** | Form handling & validation schemas |
 | **Axios** | HTTP API client with interceptors |
 | **Socket.IO Client** | Live WebSocket event receiver |
-| **Lucide React & React Hot Toast** | Icon sets and notifications UI |
+| **Lucide React & React Hot Toast** | Icon sets and notification UI |
 
 ---
 
@@ -60,13 +61,14 @@ client/
 │   │   └── page.tsx        # Home landing page
 │   ├── components/         # Modular React components
 │   │   ├── auth/           # LoginForm, SignupForm, ProtectedRoute, GuestRoute
-│   │   ├── common/         # ThemeToggle, Pagination
+│   │   ├── common/         # Pagination, Modal containers
 │   │   ├── dashboard/      # DashboardHeader, SummaryCards
+│   │   ├── kanban/         # KanbanBoard, KanbanColumn, KanbanCard
 │   │   ├── layout/         # Navbar
-│   │   ├── notification/   # NotificationBell, NotificationCard, NotificationDropdown
+│   │   ├── notification/   # NotificationCenter, NotificationItem
 │   │   ├── task/           # TaskCard, TaskList, TaskModal, TaskForm, AISubtaskButton
-│   │   └── ui/             # Reusable UI primitives (Modal, Input, Button)
-│   ├── providers/          # Auth, Socket, Toast, and Theme Providers
+│   │   └── ui/             # Reusable UI primitives (Input, Button, DateTimePicker)
+│   ├── providers/          # Auth, Socket, and Toast Providers
 │   ├── services/           # Axios API services (auth, task, ai, notification)
 │   ├── store/              # Zustand global stores
 │   ├── types/              # TypeScript interfaces (task, auth, notification)
@@ -115,7 +117,6 @@ graph TD
     UI[React Components] --> AuthStore[useAuthStore]
     UI --> TaskStore[useTaskStore]
     UI --> NotifStore[useNotificationStore]
-    UI --> ThemeStore[useThemeStore]
 
     AuthStore <-->|Auth APIs| AuthAPI[auth.service.ts]
     TaskStore <-->|Task APIs| TaskAPI[task.service.ts]
@@ -127,9 +128,8 @@ graph TD
 
 ### Store Responsibilities:
 1. `useAuthStore`: Manages user credentials, authentication state, login, signup, and logout.
-2. `useTaskStore`: Manages server-side pagination, search queries, status/priority filters, task creation, editing, completion, and deletion.
+2. `useTaskStore`: Manages server-side pagination, search queries, status/priority filters, view mode (`kanban` vs `grid`), task creation, editing, status updates, and deletion.
 3. `useNotificationStore`: Manages unread notification counts, notification dropdown visibility, and live socket listeners.
-4. `useThemeStore`: Manages theme selection (`light`, `dark`, `system`), syncs with `localStorage`, and updates `document.documentElement` class list.
 
 ---
 

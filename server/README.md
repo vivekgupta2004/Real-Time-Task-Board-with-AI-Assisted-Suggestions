@@ -1,6 +1,6 @@
 # Backend Documentation - Real-Time Task Board Server
 
-Production-grade Express.js & TypeScript REST API and Socket.IO server powering real-time task management, AI subtask generation via Google Gemini, server-side MongoDB aggregation, and Firebase notifications.
+Production-grade Express.js & TypeScript REST API and Socket.IO server powering real-time task management, Kanban status updates, AI subtask generation via Google Gemini, server-side MongoDB aggregation, and Firebase notifications.
 
 ---
 
@@ -11,17 +11,21 @@ Production-grade Express.js & TypeScript REST API and Socket.IO server powering 
   - Dual JWT token system (Short-lived Access Token, Long-lived Refresh Token).
   - Strict password validation (min 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special character).
   - Strict email provider validation (allows only `@gmail.com`, `@outlook.com`, `@yahoo.com`, `@hotmail.com`, and `@icloud.com`).
+- 📋 **Kanban & Task Management Logic**:
+  - Status updates (`pending` ↔ `in_progress` ↔ `completed`) saved directly in MongoDB.
+  - Automatic parent task completion when all subtasks become completed.
+  - Automatic subtask completion when parent task is moved directly to Completed status.
 - ⚡ **Real-Time Sync (Socket.IO)**:
-  - Rooms per user (`user:<userId>`).
-  - Broadcasts live events for task creation, updates, completion, deletion, and notifications.
+  - User-isolated WebSocket rooms (`user:<userId>`).
+  - Broadcasts live events for task creation, status updates, completion, deletion, and notifications.
 - 🤖 **Google Gemini AI Integration**:
   - Automatically parses task title and description to produce structured, actionable subtasks using `@google/genai`.
 - 🔍 **Server-Side MongoDB Search, Filter & Sort Engine**:
   - Executed directly inside MongoDB queries (`skip`, `limit`, `$regex`, `$switch` priority weight aggregations).
-  - Configurable page size (default: 9 items per page for 3x3 grid layouts).
-- 🔔 **Firebase Admin SDK Notification Engine**:
+  - Configurable page size with multi-field sorting by Priority, Due Date, Creation Date, and Title.
+- 🔔 **Firebase Admin SDK Notification Engine & Due Date Logic**:
   - Initializes via environment variables (`FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`).
-  - Robust PEM RSA private key parser supporting escaped newline characters (`\n`).
+  - Automatically sends 24-hour due date reminders ONLY for active tasks (`Pending` or `In Progress`). Completed tasks are automatically skipped and never receive due reminders.
   - Persists notifications to Firestore with in-memory fallback.
 - 📘 **Swagger OpenAPI Specs**:
   - Self-documenting API available at `/api-docs`.
@@ -54,7 +58,7 @@ server/
 │   ├── middleware/         # Auth guard, Zod validation, Error handler
 │   ├── models/             # Mongoose Models (User, Task)
 │   ├── routes/             # Express Route definitions & OpenAPI specs
-│   ├── services/           # Database queries, MongoDB aggregations, AI logic
+│   ├── services/           # Database queries, MongoDB aggregations, AI logic, Notification filters
 │   ├── socket/             # Socket.IO connection & user room emitter helpers
 │   ├── utils/              # AppError class, Auth & Task validation schemas
 │   ├── app.ts              # Express application setup
@@ -91,6 +95,9 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_RSA_PRIVATE_KEY_HERE\n--
 # Google Gemini AI Config
 GEMINI_API_KEY=your_gemini_api_key
 GEMINI_MODEL=gemini-3.6-flash
+
+# Allowed Client Origin
+CLIENT_URL=http://localhost:3000
 ```
 
 ---
@@ -130,7 +137,7 @@ npm start
 | `GET` | `/api/tasks` | Get paginated, filtered, searched & sorted tasks | ✅ Yes |
 | `POST` | `/api/tasks` | Create a new task (with optional subtasks) | ✅ Yes |
 | `GET` | `/api/tasks/:id` | Get specific task details | ✅ Yes |
-| `PUT` | `/api/tasks/:id` | Update task details or title/description | ✅ Yes |
+| `PUT` | `/api/tasks/:id` | Update task details, status (`pending`, `in_progress`, `completed`), or subtasks | ✅ Yes |
 | `DELETE` | `/api/tasks/:id` | Delete a task | ✅ Yes |
 | `PATCH` | `/api/tasks/:id/complete` | Mark task as completed | ✅ Yes |
 | `PATCH` | `/api/tasks/:id/subtasks/:subtaskId/toggle` | Toggle subtask completion status | ✅ Yes |
@@ -204,7 +211,7 @@ erDiagram
 3. **No Unhandled Crashes**:
    - Operational errors wrapped in `AppError` class and handled by `error.middleware.ts`.
 4. **Environment Security**:
-   - Secrets and Firebase RSA keys stored exclusively in `.env`.
+   - Secrets, `CLIENT_URL`, and Firebase RSA keys stored exclusively in `.env`.
 
 ---
 
