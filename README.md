@@ -31,6 +31,29 @@ A production-ready, full-stack Task Management application featuring an interact
 
 ---
 
+## 🔑 Demo Account
+
+To quickly explore all features of the application without creating your own tasks, use the following demo account:
+
+| Email | Password |
+|---|---|
+| `demo@gmail.com` | `Demo@123` |
+
+The demo account includes pre-populated data to showcase:
+
+- Dashboard Statistics
+- Kanban Board
+- AI-Generated Subtasks
+- Task CRUD Operations
+- Search, Filter & Sorting
+- Pagination
+- Real-Time Updates (Socket.IO)
+- Notifications
+- Completed Tasks
+- Tasks with Subtasks
+
+---
+
 ## 🏗 Architecture Overview
 
 ```mermaid
