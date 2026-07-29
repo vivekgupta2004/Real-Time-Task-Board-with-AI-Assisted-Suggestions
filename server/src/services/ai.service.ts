@@ -12,6 +12,13 @@ const stripMarkdown = (text: string): string => {
   return cleaned.trim();
 };
 
+const sanitizePromptText = (text: string): string => {
+  return text
+    .replace(/<[^>]*>?/gm, '') // Strip HTML tags
+    .replace(/[\r\n]+/g, ' ') // Remove newline injection breakouts
+    .trim();
+};
+
 export const generateTaskSuggestion = async (
   input: TaskSuggestionInput
 ): Promise<AISubtasksResponse> => {
@@ -20,10 +27,17 @@ export const generateTaskSuggestion = async (
     throw new AppError('Gemini API key is not configured on the server', 500);
   }
 
+  const cleanTitle = sanitizePromptText(input.title);
+  const cleanDescription = sanitizePromptText(input.description || '');
+
+  if (cleanTitle.length < 3 || !/[a-zA-Z0-9]/.test(cleanTitle)) {
+    throw new AppError('Please enter a valid task title before requesting AI suggestions', 400);
+  }
+
   const prompt = `You are an expert AI productivity assistant. Analyze the task title and description below and generate 3 to 4 actionable, specific, concise subtasks in logical execution order.
 
-Task Title: "${input.title}"
-Task Description: "${input.description || 'No description provided'}"
+Task Title: "${cleanTitle}"
+Task Description: "${cleanDescription || 'No description provided'}"
 
 Requirements:
 - Generate ONLY 3 to 4 subtasks.
