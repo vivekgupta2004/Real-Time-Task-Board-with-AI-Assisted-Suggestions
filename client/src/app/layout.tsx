@@ -9,10 +9,11 @@ export const metadata: Metadata = {
   title: 'TaskBoardAiX21cc',
   description: 'TaskBoardAiX21cc - Real-Time Task Board with AI-Assisted Suggestions',
   icons: {
-    icon: '/favicon.png',
-    shortcut: '/favicon.png',
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
     apple: '/favicon.png',
   },
+
 };
 
 
