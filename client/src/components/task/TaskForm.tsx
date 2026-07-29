@@ -71,7 +71,11 @@ export const TaskForm = () => {
         priority: selectedTask.priority || 'medium',
         dueDate: formatForDateTimeLocal(selectedTask.dueDate),
       });
-      setSubtasks(selectedTask.subtasks || []);
+      // Clone subtasks to isolate modal draft changes from global store
+      const clonedSubtasks = selectedTask.subtasks
+        ? selectedTask.subtasks.map((s) => ({ ...s }))
+        : [];
+      setSubtasks(clonedSubtasks);
       setLastAiInput(null);
     } else {
       reset({
@@ -84,6 +88,7 @@ export const TaskForm = () => {
       setLastAiInput(null);
     }
   }, [modalMode, selectedTask, reset]);
+
 
   const handleSuggestSubtasks = async () => {
     if (isReadOnly || isAiLoading) return;

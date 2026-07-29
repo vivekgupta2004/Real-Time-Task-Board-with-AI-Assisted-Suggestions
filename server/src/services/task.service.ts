@@ -6,7 +6,12 @@ import { AppError } from '../utils/appError';
 import { CreateTaskInput, UpdateTaskInput, CreateSubtaskInput, UpdateSubtaskInput } from '../validations/task.validation';
 
 
-const checkAndNotifyDueSoon = async (userId: string, taskTitle: string, dueDate: Date): Promise<void> => {
+const checkAndNotifyDueSoon = async (userId: string, taskTitle: string, dueDate: Date, status?: string): Promise<void> => {
+  // Do NOT send due date notifications if task is already completed
+  if (status === 'completed') {
+    return;
+  }
+
   const now = new Date();
   const twentyFourHoursLater = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
@@ -19,6 +24,7 @@ const checkAndNotifyDueSoon = async (userId: string, taskTitle: string, dueDate:
     });
   }
 };
+
 
 const notifyTaskEvent = (userId: string, eventName: string, payload: any): void => {
   try {
@@ -97,7 +103,8 @@ export const createTask = async (userId: string, data: CreateTaskInput): Promise
     data: task,
   });
 
-  await checkAndNotifyDueSoon(userId, task.title, dueDate);
+  await checkAndNotifyDueSoon(userId, task.title, dueDate, task.status);
+
 
   return task;
 };
@@ -225,6 +232,34 @@ export const updateTask = async (
   if (data.title !== undefined) task.title = data.title;
   if (data.description !== undefined) task.description = data.description;
   if (data.priority !== undefined) task.priority = data.priority;
+  if (data.status !== undefined && ['pending', 'in_progress', 'completed'].includes(data.status)) {
+    const previousStatus = task.status;
+    task.status = data.status;
+
+    if (data.status === 'completed') {
+      const utcNow = new Date();
+      task.completedAt = utcNow;
+      if (task.subtasks && task.subtasks.length > 0) {
+        task.subtasks.forEach((s: any) => {
+          s.completed = true;
+          s.completedAt = utcNow;
+        });
+      }
+    } else {
+      task.completedAt = null;
+    }
+
+    if (previousStatus !== 'completed' && task.status === 'completed') {
+      await createNotification({
+        userId,
+        title: 'Task Completed',
+        message: `Your task '${task.title}' has been completed.`,
+        type: 'completed',
+      });
+    }
+  }
+
+
   if (data.dueDate !== undefined) {
     const newDueDate = new Date(data.dueDate);
     if (isNaN(newDueDate.getTime()) || newDueDate <= new Date()) {
@@ -232,6 +267,7 @@ export const updateTask = async (
     }
     task.dueDate = newDueDate;
   }
+
 
   if (data.subtasks !== undefined && Array.isArray(data.subtasks)) {
     task.subtasks = data.subtasks.map((s: any) => ({
@@ -250,9 +286,10 @@ export const updateTask = async (
     data: task,
   });
 
-  if (task.dueDate) {
-    await checkAndNotifyDueSoon(userId, task.title, task.dueDate);
+  if (task.dueDate && task.status !== 'completed') {
+    await checkAndNotifyDueSoon(userId, task.title, task.dueDate, task.status);
   }
+
 
   return task;
 };

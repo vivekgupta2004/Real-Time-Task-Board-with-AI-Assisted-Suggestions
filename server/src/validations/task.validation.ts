@@ -41,6 +41,7 @@ export const updateTaskSchema = z.object({
     .max(1000, 'Description cannot exceed 1000 characters')
     .optional(),
   priority: z.enum(['low', 'medium', 'high']).optional(),
+  status: z.enum(['pending', 'in_progress', 'completed']).optional(),
   dueDate: z
     .string()
     .refine((val) => !isNaN(Date.parse(val)), { message: 'Invalid date format' })
@@ -48,6 +49,7 @@ export const updateTaskSchema = z.object({
     .optional(),
   subtasks: z.array(subtaskInputSchema).optional(),
 });
+
 
 export const createSubtaskSchema = z.object({
   title: z

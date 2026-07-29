@@ -12,10 +12,28 @@ interface TaskCardProps {
 }
 
 export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
-  const { openEditModal, openDeleteModal, completeTask, toggleSubtask } = useTaskStore();
+  const { openEditModal, openDeleteModal, completeTask, updateTask, toggleSubtask } = useTaskStore();
   const [isCompleting, setIsCompleting] = useState(false);
   const isCompleted = task.status === 'completed';
   const hasSubtasks = task.subtasks && task.subtasks.length > 0;
+
+  const handleStatusSelect = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newStatus = e.target.value as any;
+    if (newStatus === task.status) return;
+
+    try {
+      await updateTask(task._id, { status: newStatus });
+      toast.success(
+        newStatus === 'completed'
+          ? 'Task marked as Completed!'
+          : `Status changed to ${newStatus === 'in_progress' ? 'In Progress' : 'Pending'}`
+      );
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || 'Failed to update status';
+      toast.error(msg);
+    }
+  };
+
 
   const formatLocalDateTime = (dateStr?: string | null): string => {
     if (!dateStr) return 'N/A';
@@ -61,18 +79,22 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     >
       <div>
         <div className="flex items-center justify-between gap-2 mb-3">
-          <span
-            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold capitalize ${
+          <select
+            value={task.status}
+            onChange={handleStatusSelect}
+            className={`px-2.5 py-1 rounded-lg text-xs font-semibold border outline-none cursor-pointer transition shadow-2xs ${
               isCompleted
-                ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
                 : task.status === 'in_progress'
-                ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                : 'bg-amber-100 text-amber-800 border border-amber-200'
+                ? 'bg-blue-100 text-blue-800 border-blue-200'
+                : 'bg-amber-100 text-amber-800 border-amber-200'
             }`}
           >
-            {isCompleted ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-            {isCompleted ? 'Completed' : task.status.replace('_', ' ')}
-          </span>
+            <option value="pending">Pending</option>
+            <option value="in_progress">In Progress</option>
+            <option value="completed">Completed</option>
+          </select>
+
 
           <div className="flex items-center gap-2">
             {task.priority && (
@@ -135,17 +157,6 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
             <Calendar className="w-3.5 h-3.5 text-gray-400" />
             <span>Due: {formatLocalDateTime(task.dueDate)}</span>
           </div>
-
-          {!isCompleted && !hasSubtasks && (
-            <button
-              onClick={handleComplete}
-              disabled={isCompleting}
-              className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-md text-xs font-medium shadow-sm transition"
-            >
-              <Check className="w-3.5 h-3.5" />
-              <span>{isCompleting ? 'Completing...' : 'Complete'}</span>
-            </button>
-          )}
         </div>
 
         {isCompleted && task.completedAt && (
@@ -155,6 +166,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
           </div>
         )}
       </div>
+
     </div>
   );
 };

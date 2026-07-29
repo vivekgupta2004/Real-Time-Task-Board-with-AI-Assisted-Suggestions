@@ -36,11 +36,17 @@ interface TaskState {
   isDeleteModalOpen: boolean;
   taskToDelete: Task | null;
 
+  // View mode state (Kanban vs Grid)
+  viewMode: 'kanban' | 'grid';
+  setViewMode: (mode: 'kanban' | 'grid') => void;
+
   fetchTasks: () => Promise<void>;
   createTask: (data: TaskFormData & { subtasks?: any[] }) => Promise<void>;
-  updateTask: (id: string, data: Partial<TaskFormData> & { subtasks?: any[] }) => Promise<void>;
+  updateTask: (id: string, data: Partial<TaskFormData> & { status?: TaskStatus; subtasks?: any[] }) => Promise<void>;
+
   completeTask: (id: string) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
+
 
   // Subtask Actions
   addSubtask: (taskId: string, title: string) => Promise<void>;
@@ -94,7 +100,11 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   isDeleteModalOpen: false,
   taskToDelete: null,
 
+  viewMode: 'kanban',
+  setViewMode: (mode) => set({ viewMode: mode }),
+
   fetchTasks: async () => {
+
     set({ isLoading: true, error: null });
     try {
       const { page, limit, searchQuery, statusFilter, priorityFilter, sortBy, order } = get();
